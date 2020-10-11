@@ -3,7 +3,7 @@ import sqlite3 as sql
 import custform # подумать как избежать двух импортов
 import touropform
 from os import path
-def reqhotelform(results3):
+def reqhotelform(conn,results3):
 #   форма редактирования отеля
     reqhotellayout = [
     [sg.T('Проживание с:',size=(16,1)), sg.In(results3[1], size=(10,1), key='-DATEHB'), sg.T('по:', auto_size_text=True),
@@ -18,10 +18,10 @@ def reqhotelform(results3):
         event, values =rhwnd.read()
         if event == 'Выход'  or event is None:
             break
-        if event in ('Сохранить'):
-            upd_sql = "UPDATE Agency_card SET name = '" + str(values[0]) + "', adress = '" + str(values[1]) + "', inn = '" + str(values[2]) + "', kpp = '" + str(values[3]) + "', ogrn = '" + str(values[4]) + "', okved = '" + str(values[5]) + "', phone = '" + str(values[6]) + "', e_mail = '" + str(values[7]) + "', www = '" + str(values[8]) +"', boss = '" + str(values[9]) + "', bank_name  = '" + str(values[10]) + "', account = '" + str(values[11]) + "', cor_account = '" +str(values[12]) + "', bank_bik = '" + str(values[13]) + "' WHERE id = " + str(agency_id) +";"
-            cursor.execute(upd_sql)
-            conn.commit()
+#        if event in ('Сохранить'):
+#            upd_sql = "UPDATE Agency_card SET name = '" + str(values[0]) + "', adress = '" + str(values[1]) + "', inn = '" + str(values[2]) + "', kpp = '" + str(values[3]) + "', ogrn = '" + str(values[4]) + "', okved = '" + str(values[5]) + "', phone = '" + str(values[6]) + "', e_mail = '" + str(values[7]) + "', www = '" + str(values[8]) +"', boss = '" + str(values[9]) + "', bank_name  = '" + str(values[10]) + "', account = '" + str(values[11]) + "', cor_account = '" +str(values[12]) + "', bank_bik = '" + str(values[13]) + "' WHERE id = " + str(agency_id) +";"
+#           cursor.execute(upd_sql)
+#           conn.commit()
     rhwnd.close()
 
 def form (conn):
@@ -64,8 +64,7 @@ def form (conn):
     if results4==[]:
         results4 = [('', '','', '', '', '', '')]
     header_list_turists = ['Имя (LAT)', 'Фамилия (LAT)', 'Дата рождения', 'Номер ЗП', 'Дата выдачи', 'Действует по', 'Подр.' ]
-    print(results[17])
-
+    print(results[23], results[25],results[27])
     agencylayout = [
         [sg.T('Заявка №', auto_size_text=True), sg.T(text = str(results[0]), size=(4,1)), sg.T('от', auto_size_text=True),
         sg.In(results[1], size=(10,1), key='-DATR-'), sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATR-', format='%d.%m.%Y'),
@@ -88,11 +87,11 @@ def form (conn):
         [sg.T('', size=(6,1))],
         [sg.T('Экскурсионная программа', auto_size_text=True), sg.In(results[11],size=(30,1)),
         sg.T('Прочие услуги', auto_size_text=True), sg.In(results[12],size=(40,1))],
-        [sg.Checkbox('Гид', default=results[13]), sg.Checkbox('Экскурсовод', default=results[14]),
-        sg.Checkbox('Руководитель группы', default=results[15]), sg.Checkbox('Виза', default=results[16])],
-        [sg.T('Страхование: ', auto_size_text=True), sg.Checkbox('медицинское', default=results[17]),
-        sg.Checkbox('от несчастного случая', default=results[18]),  sg.Checkbox('от невыезда', default=results[19]),
-        sg.T('примечание', auto_size_text=True), sg.In(results[32], size=(20,1))],
+#        [sg.Checkbox('Гид', default=results[13]), sg.Checkbox('Экскурсовод', default=results[14]),
+#        sg.Checkbox('Руководитель группы', default=results[15]), sg.Checkbox('Виза', default=results[16])],
+#        [sg.T('Страхование: ', auto_size_text=True), sg.Checkbox('медицинское', default=results[17]),
+#        sg.Checkbox('от несчастного случая', default=results[18]),  sg.Checkbox('от невыезда', default=results[19]),
+#        sg.T('примечание', auto_size_text=True), sg.In(results[32], size=(20,1))],
         [sg.T(' ', size=(6,1))],
         [sg.T('Туристы:' , size=(6,1)),
         sg.Table( values=results4 , headings=header_list_turists, num_rows=4, key='-LTURISTS-', enable_events=True, pad=(5, 5), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
@@ -106,45 +105,43 @@ def form (conn):
         sg.Combo(('Евро', 'Доллар', 'Рубль'), default_value=results[21], size=(10,1))],
         [sg.T('Дата аванса', auto_size_text=True), sg.In(results[22],size=(10,1), key='-DATEA-'),
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEA-', format='%d.%m.%Y'),
-        sg.Checkbox('', default=results[23]),
+        sg.Combo(('Да','Нет'), default_value=results[23], size=(3,1)),
         sg.T('Дата полной оплаты', auto_size_text=True), sg.In(results[24],size=(10,1), key='-DATEO-'),
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEO-', format='%d.%m.%Y'),
-        sg.Checkbox('', default=results[25]),
+        sg.Combo(('Да','Нет'), default_value=results[25], size=(3,1)),
         sg.T('Документы до', auto_size_text=True), sg.In(results[26], size=(10,1), key='-DATED-'),
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATED-', format='%d.%m.%Y'),
-        sg.Checkbox('',  default=results[27])],
+        sg.Combo(('Да','Нет'), default_value=results[27], size=(3,1))],
         [sg.T('Полная стоимость (руб)', auto_size_text=True), sg.In(results[29],size=(7,1)),
         sg.T('Полная стоимость (вал)', auto_size_text=True), sg.In(results[28],size=(7,1)),
         sg.T('Аванс', auto_size_text=True), sg.In(results[30],size=(7,1)), sg.T('Курс оператора', auto_size_text=True), sg.In(results[31],size=(7,1))],
         [sg.T('_'  * 100, size=(75, 1))],
-        [sg.Checkbox('медицинское', default=results[17])],
         [sg.Button('Сохранить'), sg.Button('Выход')]]
 
     rewnd = sg.Window('Информация по заявке', agencylayout, no_titlebar=False)
 
     while True:
         event, values =rewnd.read()
-
         if event == 'Выход'  or event is None:
             break
-
         if event == '-AHOTEL-':
-            answ = sg.popup('Добавить новый отель? ', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
-            if answ == 'Да':
-                ins_sql = "INSERT INTO req_accom (id_req, no_in_table) VALUES ('" + str(req_id) + "');"
-                cursor.execute(ins_sql)
-                conn.commit()
-                cursor.execute("SELECT date_begin, date_end, hotel, quant_room, accom, meal, hotel_addr FROM req_accom WHERE id_req = "+ str(req_id))
-                results3 = cursor.fetchall()
-                reqhotelform(results3)
-
+            try:
+                answ = sg.popup('Добавить новый отель? ', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
+                if answ == 'Да':
+                    ins_sql = "INSERT INTO req_accom (id_req, no_in_table) VALUES ('" + str(req_id) + "');"
+                    cursor.execute(ins_sql)
+                    conn.commit()
+                    cursor.execute("SELECT date_begin, date_end, hotel, quant_room, accom, meal, hotel_addr FROM req_accom WHERE id_req = "+ str(req_id))
+                    results3 = cursor.fetchall()
+                    reqhotelform(conn,results3)
+            except:
+                answ = sg.popup("ERROR", "-AHOTEL-")
         if event == '-MHOTEL-':
             if values['-LHOTEL-'] == []:
                 nrow = 0
             else:
                 nrow = values['-LHOTEL-'][0]
-            reqhotelform(results3[nrow])
-
+            reqhotelform(conn,results3[nrow])
         if event == '-CUST-':
             rewnd.Disable()
             cust_id = custform.form(conn)
@@ -157,17 +154,20 @@ def form (conn):
             rewnd.BringToFront()
 
         if event == '-TOUROP-':
-            rewnd.Disable()
-            id_oper = touropform.form(conn)
-            if id_oper != 0:
-                cursor.execute("SELECT name_short_to FROM Cat_tourop WHERE id_to = "+ str(id_oper))
-                results2 = cursor.fetchone()
-                rewnd['-TO-'].update(results2[0])
-            rewnd.Enable()
-            rewnd.BringToFront()
+            try:
+                rewnd.Disable()
+                id_oper = touropform.form(conn)
+                if id_oper != 0:
+                    cursor.execute("SELECT name_short_to FROM Cat_tourop WHERE id_to = "+ str(id_oper))
+                    results2 = cursor.fetchone()
+                    rewnd['-TO-'].update(results2[0])
+                rewnd.Enable()
+                rewnd.BringToFront()
+            except:
+                answ = sg.popup("ERROR", "-TOUROP-")
 
-#        if event == ('Сохранить'):
-#            answ = sg.popup('Сохранить внесенные изменения ', custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
+        if event == ('Сохранить'):
+            answ = sg.popup('Сохранить внесенные изменения ', custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
 #            if answ == 'Сохранить':
 #                upd_sql = "UPDATE list_request SET date_req = '" + str(values['-DATR-']) + "', numb_contr = '" + str(values[0]) + \
 #                "', country = '" + str(values[1]) + "', region = '" + str(values[2]) + "', id_cust = '" + str(cust_id) + \
@@ -187,3 +187,4 @@ def form (conn):
 #            break
 
     rewnd.close()
+    return req_id

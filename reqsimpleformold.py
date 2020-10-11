@@ -99,3 +99,4 @@ def form (conn):
             conn.commit()
 
     rewnd.close()
+    return req_id
