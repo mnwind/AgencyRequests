@@ -64,7 +64,7 @@ def form (conn):
     if results4==[]:
         results4 = [('', '','', '', '', '', '')]
     header_list_turists = ['Имя (LAT)', 'Фамилия (LAT)', 'Дата рождения', 'Номер ЗП', 'Дата выдачи', 'Действует по', 'Подр.' ]
-    print(results[23], results[25],results[27])
+#    print(results[23], results[25],results[27])
     agencylayout = [
         [sg.T('Заявка №', auto_size_text=True), sg.T(text = str(results[0]), size=(4,1)), sg.T('от', auto_size_text=True),
         sg.In(results[1], size=(10,1), key='-DATR-'), sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATR-', format='%d.%m.%Y'),
@@ -87,11 +87,13 @@ def form (conn):
         [sg.T('', size=(6,1))],
         [sg.T('Экскурсионная программа', auto_size_text=True), sg.In(results[11],size=(30,1)),
         sg.T('Прочие услуги', auto_size_text=True), sg.In(results[12],size=(40,1))],
-#        [sg.Checkbox('Гид', default=results[13]), sg.Checkbox('Экскурсовод', default=results[14]),
-#        sg.Checkbox('Руководитель группы', default=results[15]), sg.Checkbox('Виза', default=results[16])],
-#        [sg.T('Страхование: ', auto_size_text=True), sg.Checkbox('медицинское', default=results[17]),
-#        sg.Checkbox('от несчастного случая', default=results[18]),  sg.Checkbox('от невыезда', default=results[19]),
-#        sg.T('примечание', auto_size_text=True), sg.In(results[32], size=(20,1))],
+        [sg.T('Гид', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[13], size=(3,1)),
+        sg.T('Экскурсовод', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[14], size=(3,1)),
+        sg.T('Руководитель группы', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[15], size=(3,1))],
+        [sg.T('Страхование: медицинское', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[17], size=(3,1)),
+        sg.T('от несчасного случая', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[18], size=(3,1)),
+        sg.T('от невыезда', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[19], size=(3,1)),
+        sg.T('примечание', auto_size_text=True), sg.In(results[32], size=(20,1))],
         [sg.T(' ', size=(6,1))],
         [sg.T('Туристы:' , size=(6,1)),
         sg.Table( values=results4 , headings=header_list_turists, num_rows=4, key='-LTURISTS-', enable_events=True, pad=(5, 5), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
