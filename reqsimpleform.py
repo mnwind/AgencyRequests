@@ -3,6 +3,16 @@ import sqlite3 as sql
 import custform # подумать как избежать двух импортов
 import touropform
 from os import path
+
+def listhotel(cursor, req_id):
+#   получение информации из таблицы размещений по ИД заявки
+    cursor.execute("SELECT no_in_table, date_begin, date_end, hotel, type_room, quant_room, accom, meal, hotel_addr FROM req_accom WHERE id_req = "+ str(req_id))
+    results3 = cursor.fetchall()
+#   если гостиницы нет то создать пустой список
+    if results3==[]:
+        results3 = [('', '', '', '', '', '', '', '','')]
+    return results3
+
 def reqhotelform(conn,results3,req_id):
 #   форма редактирования отеля
     reqhotellayout = [
@@ -21,11 +31,12 @@ def reqhotelform(conn,results3,req_id):
         if event == 'Выход'  or event is None:
             break
         if event in ('Сохранить'):
-            upd_sql = "'UPDATE req_accom SET date_begin = '" + str(values['-DATEHB-']) + "', date_end = '" + str(values['-DATEHE-']) + "', hotel = '" + str(values['-REQHOTEL-']) + "', hotel_addr = '" + str(values['-ADRHOTEL-']) + "', type_room = '" + str(values['-NROOMHOTEL-']) + "', quant_room = '" + str(values['-QROOMHOTEL-']) + "', accom = '" + str(values['-TROOMHOTEL-']) + "', meal = '" + str(values['-MEALHOTEL-']) + "' WHERE (id_req = '" + str(req_id) +"' AND no_in_table= '" + str(results3[0]) + "');"
-            print(upd_sql)
+            column_values = (values['-DATEHB-'], values['-DATEHE-'], values['-REQHOTEL-'], values['-ADRHOTEL-'], values['-NROOMHOTEL-'], values['-QROOMHOTEL-'], values['-TROOMHOTEL-'], values['-MEALHOTEL-'], req_id, results3[0])
+            upd_sql = "UPDATE req_accom SET date_begin = ?, date_end = ?, hotel = ?, hotel_addr = ?, type_room = ?, quant_room = ?, accom = ?, meal = ? WHERE id_req = ? AND no_in_table= ?;"
             cursor = conn.cursor()
-            cursor.execute(upd_sql)
+            cursor.execute(upd_sql,column_values)
             conn.commit()
+            break
     rhwnd.close()
 
 def form (conn):
@@ -54,11 +65,12 @@ def form (conn):
         id_oper = results[20]
 
 #   получение информации из таблицы размещений по ИД заявки
-    cursor.execute("SELECT no_in_table, date_begin, date_end, hotel, type_room, quant_room, accom, meal, hotel_addr FROM req_accom WHERE id_req = "+ str(req_id))
-    results3 = cursor.fetchall()
+    results3 = listhotel(cursor, req_id)
+#    cursor.execute("SELECT no_in_table, date_begin, date_end, hotel, type_room, quant_room, accom, meal, hotel_addr FROM req_accom WHERE id_req = "+ str(req_id))
+#    results3 = cursor.fetchall()
 #   если гостиницы нет то создать пустой список
-    if results3==[]:
-        results3 = [('', '', '', '', '', '', '', '','')]
+#    if results3==[]:
+#        results3 = [('', '', '', '', '', '', '', '','')]
 #   Заголовок для таблицы гостиниц в форме
     header_list_hotel = ['№ ', 'Заезд', 'Выезд', 'Наименование отеля', 'Номер', 'Номеров', 'Тип размещения', 'Питание', 'Адрес отеля' ]
 
@@ -141,7 +153,7 @@ def form (conn):
                     conn.commit()
                     cursor.execute("SELECT date_begin, date_end, hotel, quant_room, accom, meal, hotel_addr FROM req_accom WHERE id_req = "+ str(req_id))
                     results3 = cursor.fetchall()
-                    reqhotelform(conn,results3)
+                    reqhotelform(conn,results3,req_id)
             except:
                 answ = sg.popup("ERROR", "-AHOTEL-")
         if event == '-MHOTEL-':
@@ -150,6 +162,8 @@ def form (conn):
             else:
                 nrow = values['-LHOTEL-'][0]
             reqhotelform(conn,results3[nrow],req_id)
+            results3 = listhotel(cursor, req_id)
+            rewnd['-LHOTEL-'].update(values=results3)
         if event == '-CUST-':
             rewnd.Disable()
             cust_id = custform.form(conn)
