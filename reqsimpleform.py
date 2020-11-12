@@ -66,11 +66,6 @@ def form (conn):
 
 #   получение информации из таблицы размещений по ИД заявки
     results3 = listhotel(cursor, req_id)
-#    cursor.execute("SELECT no_in_table, date_begin, date_end, hotel, type_room, quant_room, accom, meal, hotel_addr FROM req_accom WHERE id_req = "+ str(req_id))
-#    results3 = cursor.fetchall()
-#   если гостиницы нет то создать пустой список
-#    if results3==[]:
-#        results3 = [('', '', '', '', '', '', '', '','')]
 #   Заголовок для таблицы гостиниц в форме
     header_list_hotel = ['№ ', 'Заезд', 'Выезд', 'Наименование отеля', 'Номер', 'Номеров', 'Тип размещения', 'Питание', 'Адрес отеля' ]
 
@@ -144,19 +139,24 @@ def form (conn):
         event, values =rewnd.read()
         if event == 'Выход'  or event is None:
             break
-        if event == '-AHOTEL-':
-            try:
-                answ = sg.popup('Добавить новый отель? ', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
-                if answ == 'Да':
-                    ins_sql = "INSERT INTO req_accom (id_req, no_in_table) VALUES ('" + str(req_id) + "');"
-                    cursor.execute(ins_sql)
-                    conn.commit()
-                    cursor.execute("SELECT date_begin, date_end, hotel, quant_room, accom, meal, hotel_addr FROM req_accom WHERE id_req = "+ str(req_id))
-                    results3 = cursor.fetchall()
-                    reqhotelform(conn,results3,req_id)
-            except:
-                answ = sg.popup("ERROR", "-AHOTEL-")
-        if event == '-MHOTEL-':
+        if event == '-AHOTEL-': # добавление нового отеля в список по заявке
+            answ = sg.popup('Добавить новый отель? ', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
+            if answ == 'Да':
+#           Определение номера строки отеля (no_in_table)  
+                cursor.execute('SELECT MAX(no_in_table) FROM req_accom WHERE id_req = "'+str(req_id)+'"')
+                n_s_h = cursor.fetchone()
+                if n_s_h[0] is None:
+                    n_str_hotel = 1
+                else:
+                    n_str_hotel = n_s_h[0] + 1                
+                ins_sql = "INSERT INTO req_accom (id_req, no_in_table, date_begin, date_end) VALUES ('" + str(req_id) + "','" + str(n_str_hotel)+ "','" +str(results[6]) + "','" +str(results[7]) + "');"
+                cursor.execute(ins_sql)
+                conn.commit()
+                results3 = listhotel(cursor, req_id)
+                reqhotelform(conn,results3[-1],req_id)
+                results3 = listhotel(cursor, req_id)
+                rewnd['-LHOTEL-'].update(values=results3)
+        if event == '-MHOTEL-': # изменение данных по отелю
             if values['-LHOTEL-'] == []:
                 nrow = 0
             else:
@@ -164,6 +164,21 @@ def form (conn):
             reqhotelform(conn,results3[nrow],req_id)
             results3 = listhotel(cursor, req_id)
             rewnd['-LHOTEL-'].update(values=results3)
+
+        if event == '-DHOTEL-': # удаление отеля из списка по заявке
+            if values['-LHOTEL-'] == []:
+                nrow = 0
+            else:
+                nrow = values['-LHOTEL-'][0]
+            answ = sg.popup('Удалить отель ' + str(results3[nrow][3]) + ' из списка?', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
+            if answ == 'Да':
+                del_sql = "DELETE FROM req_accom WHERE id_req = ? AND no_in_table = ?"
+                column_values = (req_id, results3[nrow][0])
+                cursor.execute(del_sql, column_values)
+                conn.commit()
+                results3 = listhotel(cursor, req_id)
+                rewnd['-LHOTEL-'].update(values=results3)
+
         if event == '-CUST-':
             rewnd.Disable()
             cust_id = custform.form(conn)
