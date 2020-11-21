@@ -15,8 +15,11 @@ settings = reqsettings.load_settings(SETTINGS_FILE, DEFAULT_SETTINGS )
 c_theme = settings['theme']
 c_dbfile = settings['db_file']
 # Открытие БД
-conn = sql.connect(c_dbfile)
-cursor = conn.cursor()
+try:
+    conn = sql.connect(c_dbfile)
+    cursor = conn.cursor()
+except:
+    reqsettings.form()
 # TODO Проверка БД на пустоту
 # Установка темы
 sg.theme(c_theme)
