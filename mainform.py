@@ -20,6 +20,8 @@ try:
     cursor = conn.cursor()
 except:
     reqsettings.form()
+    conn = sql.connect(c_dbfile)
+    cursor = conn.cursor()
 # TODO Проверка БД на пустоту
 # Установка темы
 sg.theme(c_theme)
