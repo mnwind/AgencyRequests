@@ -16,6 +16,7 @@ def updatewnd(cuwnd, results1):     # Обновление правой коло
     cuwnd['-FLCUST-'].update(results1[11])
     cuwnd['-CTEL-'].update(results1[12])
     cuwnd['-CMAIL-'].update(results1[13])
+    cuwnd['-DATER-'].update(results1[14])
 
 def updatelst(cursor, cuwnd):       # Обновление списка клиентов
     cursor.execute("SELECT fio FROM Cat_cust ORDER BY fio ASC")
@@ -39,7 +40,8 @@ def form (conn):
     column_to = [[sg.Text('Информация о заказчике')],
     [sg.T('ФИО', size=(15,1)), sg.In(size=(70,1), key='-FIO-', default_text=results1[1])],
     [sg.T('Адрес', size=(15,1)), sg.In(size=(70,1), key='-ADR-', default_text=results1[2])],
-    [sg.T('Телефон', size=(15,1)), sg.In(size=(14,1), key='-CTEL-', default_text=results1[12]),
+    [sg.T('Дата рождения', size=(15,1)), sg.In(size=(10,1), key='-DATER-', default_text=results1[14]),
+    sg.T('Телефон', auto_size_text=True), sg.In(size=(14,1), key='-CTEL-', default_text=results1[12]),
     sg.T('E-mail', auto_size_text=True), sg.In(size=(20,1), key='-CMAIL-', default_text=results1[13])],
     [sg.T('_'  * 100, size=(100, 1))],
     [sg.T('Данные паспорта РФ', size=(40,1))],
@@ -109,7 +111,7 @@ def form (conn):
         if event == 'Сохранить':
             answ = sg.popup('Сохранить внесенные изменения ' + results1[1], custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Сохранить':
-                upd_sql = "UPDATE Cat_cust SET fio = '" + str(values['-FIO-']) + "', cust_adress = '" + str(values['-ADR-']) + "', num_local_pass = '" + str(values['-LPASS-']) + "', date_local_pass = '" + str(values['-DLPASS-']) + "', who_local_pass = '" + str(values['-WLPASS-']) + "', num_for_pass = '" + str(values['-FPASS-']) + "', date_iss_for_pass = '" + str(values['-DIFP-']) + "', date_end_for_pass = '" + str(values['-DEFP-']) + "', who_for_pass = '" + str(values['-WFPASS-']) + "',first_name = '" + str(values['-FNCUST-']) + "', last_name = '" + str(values['-FLCUST-']) + "', cust_tel = '" + str(values['-CTEL-']) + "', cust_email = '" + str(values['-CMAIL-']) + "' WHERE id_cust = '" + str(results1[0]) + "';"
+                upd_sql = "UPDATE Cat_cust SET fio = '" + str(values['-FIO-']) + "', cust_adress = '" + str(values['-ADR-']) + "', num_local_pass = '" + str(values['-LPASS-']) + "', date_local_pass = '" + str(values['-DLPASS-']) + "', who_local_pass = '" + str(values['-WLPASS-']) + "', num_for_pass = '" + str(values['-FPASS-']) + "', date_iss_for_pass = '" + str(values['-DIFP-']) + "', date_end_for_pass = '" + str(values['-DEFP-']) + "', who_for_pass = '" + str(values['-WFPASS-']) + "',first_name = '" + str(values['-FNCUST-']) + "', last_name = '" + str(values['-FLCUST-']) + "', cust_tel = '" + str(values['-CTEL-']) + "', cust_email = '" + str(values['-CMAIL-']) + "', date_r = '" + str(values['-DATER-']) + "' WHERE id_cust = '" + str(results1[0]) + "';"
                 cursor.execute(upd_sql) # Запись в БД
                 conn.commit()
                 s_name = updatelst(cursor, cuwnd)   #Обновление списка (возможно изменение имени)

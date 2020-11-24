@@ -4,6 +4,20 @@ import custform # подумать как избежать двух импорт
 import touropform
 from os import path
 
+def listcust(cursor,req_id):
+# получение информации из списка туристов по заявке
+    results4 = []
+    listidtour_sql = "SELECT id_cust FROM req_tourist WHERE id_req = '" +str(req_id) +"'"
+    cursor.execute(listidtour_sql)
+    rows = cursor.fetchall()
+    for row in rows:
+        listtourist_sql = "SELECT id_cust, fio, date_r, num_for_pass, date_iss_for_pass, date_end_for_pass, who_for_pass FROM Cat_cust WHERE id_cust = '" + str(row[0]) +"'"
+        cursor.execute(listtourist_sql)
+        r4 = cursor.fetchone()
+        results4.append(r4)
+    if results4==[]:
+        results4 = [('','', '','', '', '', '')]
+    return results4
 def listhotel(cursor, req_id):
 #   получение информации из таблицы размещений по ИД заявки
     cursor.execute("SELECT no_in_table, date_begin, date_end, hotel, type_room, quant_room, accom, meal, hotel_addr FROM req_accom WHERE id_req = "+ str(req_id))
@@ -70,12 +84,8 @@ def form (conn):
     header_list_hotel = ['№ ', 'Заезд', 'Выезд', 'Наименование отеля', 'Номер', 'Номеров', 'Тип размещения', 'Питание', 'Адрес отеля' ]
 
 #   получение информации из таблицы туристов по ИД заявки
-    cursor.execute("SELECT id_cust FROM req_tourist WHERE id_req = "+ str(req_id))
-    results4 = cursor.fetchall()
-    if results4==[]:
-        results4 = [('', '','', '', '', '', '')]
-    header_list_turists = ['Имя (LAT)', 'Фамилия (LAT)', 'Дата рождения', 'Номер ЗП', 'Дата выдачи', 'Действует по', 'Подр.' ]
-
+    results4 = listcust(cursor,req_id)
+    header_list_turists = ['ID','Фамилия Имя Отчество', 'Дата рождения', 'Номер З.Паспорта', 'Дата выдачи', 'Действует по', 'Подр.' ]
 #Макет окна заявки
     agencylayout = [
         [sg.T('Заявка №', auto_size_text=True), sg.T(text = str(results[0]), size=(4,1)), sg.T('от', auto_size_text=True),
@@ -92,14 +102,14 @@ def form (conn):
         [sg.T('Билет', size=(6,1)), sg.In(results[9],size=(50,1)), sg.T('Трансфер', auto_size_text=True), sg.In(results[10],size=(30,1))],
 #        [sg.T('', size=(6,1))],
         [sg.T('Отели:' , size=(6,1)),
-        sg.Table( values=results3 , headings=header_list_hotel, num_rows=2, key='-LHOTEL-', enable_events=True, pad=(5, 5), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
+        sg.Table( values=results3 , headings=header_list_hotel, num_rows=1, key='-LHOTEL-', enable_events=True, pad=(5, 5), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
         [sg.T('', size=(6,1)), sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Add_24x24.png'), key='-AHOTEL-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Properties_24x24.png'), key='-MHOTEL-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Delete_24x24.png'), key='-DHOTEL-')],
 #        [sg.T('', size=(6,1))],
         [sg.T('Экскурсионная программа', auto_size_text=True), sg.In(results[11],size=(30,1)),
         sg.T('Прочие услуги', auto_size_text=True), sg.In(results[12],size=(40,1))],
-        [sg.T('Гид', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[13], size=(3,1)),
+        [sg.T('Гид', size=(20,1)), sg.Combo(('Да','Нет'), default_value=results[13], size=(3,1)),
         sg.T('Экскурсовод', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[14], size=(3,1)),
         sg.T('Руководитель группы', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[15], size=(3,1)),
         sg.T('Виза', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[16], size=(3,1))],
@@ -111,25 +121,26 @@ def form (conn):
         [sg.T('Туристы:' , size=(6,1)),
         sg.Table( values=results4 , headings=header_list_turists, num_rows=4, key='-LTURISTS-', enable_events=True, pad=(5, 5), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
         [sg.T('', size=(6,1)), sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Add_24x24.png'), key='-ATURIST-'),
-        sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Properties_24x24.png'), key='-MTURIST-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Delete_24x24.png'), key='-DTURIST-')],
 #        [sg.T('', size=(6,1))],
         [sg.T('Оператор', auto_size_text=True), sg.T(text = str(results2[0]), relief=sg.RELIEF_SUNKEN, size=(30,1), key = '-TO-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Globe_24x24.png'), key='-TOUROP-', border_width=0),
-        sg.T('Валюта тура у туроператора', auto_size_text=True),
-        sg.Combo(('Евро', 'Доллар', 'Рубль'), default_value=results[21], size=(10,1))],
+        sg.T(('Номер заявки у туроператора'), auto_size_text=True), sg.In(results[33], size=(20,1)),
+        sg.T('Статус', auto_size_text=True), sg.Combo(('Договор','Бронь','Подтверждено','Исполнена'), default_value=results[34], size=(12,1))],
+        [sg.T('Валюта тура', auto_size_text=True), sg.Combo(('Евро', 'Доллар', 'Рубль'), default_value=results[21], size=(10,1)), 
+        sg.T('Стоимость (руб)', auto_size_text=True), sg.In(results[29],size=(7,1)),
+        sg.T('Стоимость (вал)', auto_size_text=True), sg.In(results[28],size=(7,1)),
+        sg.T('Аванс', auto_size_text=True), sg.In(results[30],size=(7,1)), 
+        sg.T('Курс оператора(Аванс)', auto_size_text=True), sg.In(results[31],size=(7,1))],
         [sg.T('Дата аванса', auto_size_text=True), sg.In(results[22],size=(10,1), key='-DATEA-'),
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEA-', format='%d.%m.%Y'),
-        sg.Combo(('Да','Нет'), default_value=results[23], size=(3,1)),
-        sg.T('Дата полной оплаты', auto_size_text=True), sg.In(results[24],size=(10,1), key='-DATEO-'),
+        sg.Combo(('Получено','Оплачено','Нет'), default_value=results[23], size=(8,1)),
+        sg.T('Дата оплаты', auto_size_text=True), sg.In(results[24],size=(10,1), key='-DATEO-'),
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEO-', format='%d.%m.%Y'),
-        sg.Combo(('Да','Нет'), default_value=results[25], size=(3,1)),
+        sg.Combo(('Получено','Оплачено','Нет'), default_value=results[25], size=(8,1)),
         sg.T('Документы до', auto_size_text=True), sg.In(results[26], size=(10,1), key='-DATED-'),
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATED-', format='%d.%m.%Y'),
-        sg.Combo(('Да','Нет'), default_value=results[27], size=(3,1))],
-        [sg.T('Полная стоимость (руб)', auto_size_text=True), sg.In(results[29],size=(7,1)),
-        sg.T('Полная стоимость (вал)', auto_size_text=True), sg.In(results[28],size=(7,1)),
-        sg.T('Аванс', auto_size_text=True), sg.In(results[30],size=(7,1)), sg.T('Курс оператора', auto_size_text=True), sg.In(results[31],size=(7,1))],
+        sg.Combo(('Получены','Сданы','Выданы','Нет'), default_value=results[27], size=(8,1))],
         [sg.T('_'  * 100, size=(75, 1))],
         [sg.Button('Сохранить'), sg.Button('Выход')]]
 
@@ -178,6 +189,32 @@ def form (conn):
                 conn.commit()
                 results3 = listhotel(cursor, req_id)
                 rewnd['-LHOTEL-'].update(values=results3)
+        
+        if event == '-DTURIST-':   # удаление туриста из заявки
+            if values['-LTURISTS-'] == []:
+                nrow = 0
+            else:
+                nrow = values['-LTURISTS-'][0]     
+            answ = sg.popup('Удалить туриста ' + str(results4[nrow][1]) + ' из списка?', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
+            if answ == 'Да':
+                del_sql = "DELETE FROM req_tourist WHERE id_req = ? AND id_cust = ?"
+                column_values = (req_id, results4[nrow][0])
+                cursor.execute(del_sql, column_values)
+                conn.commit()
+                results4 = listcust(cursor, req_id)
+                rewnd['-LTURISTS-'].update(values=results4)
+
+        if event == '-ATURIST-':   # удаление туриста из заявки
+            rewnd.Disable()
+            cust_id = custform.form(conn)
+            if cust_id != 0:
+                ins_sql = "INSERT INTO req_tourist (id_req, id_cust) VALUES ('" + str(req_id) + "','" + str(cust_id) + "');"
+                cursor.execute(ins_sql)
+                conn.commit()                
+                results4 = listcust(cursor,req_id)
+                rewnd['-LTURISTS-'].update(values=results4)      
+            rewnd.Enable()
+            rewnd.BringToFront()
 
         if event == '-CUST-':
             rewnd.Disable()
@@ -187,6 +224,12 @@ def form (conn):
                 results1 = cursor.fetchone()
                 rewnd['-FIO-'].update(results1[0])
                 answ = sg.popup('Добавить ' + results1[0] +' в список туристов по заявке?', custom_text=('Да', 'Нет'))
+                if answ == 'Да':
+                    ins_sql = "INSERT INTO req_tourist (id_req, id_cust) VALUES ('" + str(req_id) + "','" + str(cust_id) + "');"
+                    cursor.execute(ins_sql)
+                    conn.commit()
+                    results4 = listcust(cursor,req_id)
+                    rewnd['-LTURISTS-'].update(values=results4)
             rewnd.Enable()
             rewnd.BringToFront()
 
