@@ -3,6 +3,7 @@ import sqlite3 as sql
 import custform # подумать как избежать двух импортов
 import touropform
 from os import path
+from datetime import date
 
 def listcust(cursor,req_id):
 # получение информации из списка туристов по заявке
@@ -53,10 +54,16 @@ def reqhotelform(conn,results3,req_id):
             break
     rhwnd.close()
 
-def form (conn):
-    req_id = 1  #TODO заглушка потом подсунуть ИД в параметрах вызова
-#   получение информации по заявке
+def form (conn, req_id):
     cursor = conn.cursor()
+    if req_id == 0: #если заявка новая создается запись, получается id
+        cursor.execute("INSERT INTO list_request (date_req) VALUES ('" + str(date.today().strftime("%d.%m.%Y")) + "')")
+        conn.commit()
+        cursor.execute("SELECT id_req FROM list_request WHERE rowid=last_insert_rowid()")
+        r = cursor.fetchone()
+        req_id = r[0]
+ 
+#   получение информации по заявке
     cursor.execute("SELECT * FROM list_request WHERE id_req = "+ str(req_id))
     results = cursor.fetchone()
 
