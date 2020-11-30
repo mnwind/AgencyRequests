@@ -2,8 +2,19 @@ import PySimpleGUI as sg
 import sqlite3 as sql
 import custform # подумать как избежать двух импортов
 import touropform
-from os import path
+from os import path, startfile
 from datetime import date
+from docxtpl import DocxTemplate
+
+def dogform(values, fio):
+# формирование договора из шаблона  
+    doc_filename=path.join('tpl', 'contracttpl.docx')
+    doc = DocxTemplate(doc_filename)
+    context = { 'customer' : fio }
+    doc.render(context)
+    gen_doc_filename = path.join('tpl', 'contractgen.docx')
+    doc.save(gen_doc_filename)
+    startfile(gen_doc_filename)
 
 def listcust(cursor,req_id):
 # получение информации из списка туристов по заявке
@@ -97,7 +108,7 @@ def form (conn, req_id):
     agencylayout = [
         [sg.T('Заявка №', auto_size_text=True), sg.T(text = str(results[0]), size=(4,1)), sg.T('от', auto_size_text=True),
         sg.In(results[1], size=(10,1), key='-DATR-'), sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATR-', format='%d.%m.%Y'),
-        sg.T('к договору №', auto_size_text=True),  sg.In(results[2], size=(9,1)),
+        sg.T('к договору №', auto_size_text=True),  sg.In(results[2], size=(9,1), key='-NCONTR-'),
         sg.T('Заказчик', auto_size_text=True), sg.T(text = str(results1[0]), size=(30,1), relief=sg.RELIEF_SUNKEN, key='-FIO-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'User_24x24.png'), key='-CUST-', border_width=0)],
         [sg.T('Страна', size=(6,1)), sg.In(results[3], size=(20,1)), sg.T('Регион', auto_size_text=True), sg.In(results[4], size=(20,1)),
@@ -105,25 +116,25 @@ def form (conn, req_id):
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEB-', format='%d.%m.%Y'),
         sg.T('по', auto_size_text=True), sg.In(results[7], size=(10,1), key='-DATEE-'),
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEE-', format='%d.%m.%Y'),
-        sg.T('ночей', auto_size_text=True), sg.In(results[8], size=(2,1))],
+        sg.T('ночей', auto_size_text=True), sg.In(results[8], size=(2,1), key='-NNIGHT-')],
         [sg.T('Билет', size=(6,1)), sg.In(results[9],size=(50,1)), sg.T('Трансфер', auto_size_text=True), sg.In(results[10],size=(30,1))],
 #        [sg.T('', size=(6,1))],
         [sg.T('Отели:' , size=(6,1)),
-        sg.Table( values=results3 , headings=header_list_hotel, num_rows=1, key='-LHOTEL-', enable_events=True, pad=(5, 5), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
+        sg.Table( values=results3 , headings=header_list_hotel, num_rows=1, key='-LHOTEL-', enable_events=True, pad=(1, 1), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
         [sg.T('', size=(6,1)), sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Add_24x24.png'), key='-AHOTEL-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Properties_24x24.png'), key='-MHOTEL-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Delete_24x24.png'), key='-DHOTEL-')],
 #        [sg.T('', size=(6,1))],
-        [sg.T('Экскурсионная программа', auto_size_text=True), sg.In(results[11],size=(30,1)),
-        sg.T('Прочие услуги', auto_size_text=True), sg.In(results[12],size=(40,1))],
-        [sg.T('Гид', size=(20,1)), sg.Combo(('Да','Нет'), default_value=results[13], size=(3,1)),
-        sg.T('Экскурсовод', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[14], size=(3,1)),
-        sg.T('Руководитель группы', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[15], size=(3,1)),
-        sg.T('Виза', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[16], size=(3,1))],
-        [sg.T('Страхование: медицинское', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[17], size=(3,1)),
-        sg.T('от несчасного случая', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[18], size=(3,1)),
-        sg.T('от невыезда', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[19], size=(3,1)),
-        sg.T('примечание', auto_size_text=True), sg.In(results[32], size=(20,1))],
+        [sg.T('Экскурсионная программа', auto_size_text=True), sg.In(results[11],size=(30,1), key='-EPROG-'),
+        sg.T('Прочие услуги', auto_size_text=True), sg.In(results[12],size=(40,1), key='-PRUS-')],
+        [sg.T('Гид', size=(20,1)), sg.Combo(('Да','Нет'), default_value=results[13], size=(3,1), key='-GID-'),
+        sg.T('Экскурсовод', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[14], size=(3,1), key='-EXCUR-'),
+        sg.T('Руководитель группы', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[15], size=(3,1), key='-LEAD-'),
+        sg.T('Виза', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[16], size=(3,1), key='-VISA-')],
+        [sg.T('Страхование: медицинское', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[17], size=(3,1), key='-MEDS-'),
+        sg.T('от несчасного случая', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[18], size=(3,1), key='-NSS-'),
+        sg.T('от невыезда', auto_size_text=True), sg.Combo(('Да','Нет'), default_value=results[19], size=(3,1), key='-NEVS-'),
+        sg.T('примечание', auto_size_text=True), sg.In(results[32], size=(20,1), key='-PRIM-')],
 #        [sg.T(' ', size=(6,1))],
         [sg.T('Туристы:' , size=(6,1)),
         sg.Table( values=results4 , headings=header_list_turists, num_rows=4, key='-LTURISTS-', enable_events=True, pad=(5, 5), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
@@ -132,24 +143,24 @@ def form (conn, req_id):
 #        [sg.T('', size=(6,1))],
         [sg.T('Оператор', auto_size_text=True), sg.T(text = str(results2[0]), relief=sg.RELIEF_SUNKEN, size=(30,1), key = '-TO-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Globe_24x24.png'), key='-TOUROP-', border_width=0),
-        sg.T(('Номер заявки у туроператора'), auto_size_text=True), sg.In(results[33], size=(20,1)),
-        sg.T('Статус', auto_size_text=True), sg.Combo(('Договор','Бронь','Подтверждено','Исполнена'), default_value=results[34], size=(12,1))],
-        [sg.T('Валюта тура', auto_size_text=True), sg.Combo(('Евро', 'Доллар', 'Рубль'), default_value=results[21], size=(10,1)), 
-        sg.T('Стоимость (руб)', auto_size_text=True), sg.In(results[29],size=(7,1)),
-        sg.T('Стоимость (вал)', auto_size_text=True), sg.In(results[28],size=(7,1)),
-        sg.T('Аванс', auto_size_text=True), sg.In(results[30],size=(7,1)), 
-        sg.T('Курс оператора(Аванс)', auto_size_text=True), sg.In(results[31],size=(7,1))],
+        sg.T(('Номер заявки у туроператора'), auto_size_text=True), sg.In(results[33], size=(20,1), key='-NREGTO-'),
+        sg.T('Статус', auto_size_text=True), sg.Combo(('Договор','Бронь','Подтверждено','Исполнена'), default_value=results[34], size=(12,1), key='-SREGTO-')],
+        [sg.T('Валюта тура', auto_size_text=True), sg.Combo(('Евро', 'Доллар', 'Рубль'), default_value=results[21], size=(10,1), key='-CURR-'), 
+        sg.T('Стоимость (руб)', auto_size_text=True), sg.In(results[29],size=(7,1), key='-CTOURR-'),
+        sg.T('Стоимость (вал)', auto_size_text=True), sg.In(results[28],size=(7,1), key='-CTOURC-'),
+        sg.T('Аванс', auto_size_text=True), sg.In(results[30],size=(7,1), key='-VAVA-'), 
+        sg.T('Курс оператора(Аванс)', auto_size_text=True), sg.In(results[31],size=(7,1), key='-CAVA-')],
         [sg.T('Дата аванса', auto_size_text=True), sg.In(results[22],size=(10,1), key='-DATEA-'),
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEA-', format='%d.%m.%Y'),
-        sg.Combo(('Получено','Оплачено','Нет'), default_value=results[23], size=(8,1)),
+        sg.Combo(('Получено','Оплачено','Нет'), default_value=results[23], size=(8,1), key='-SAVA-'),
         sg.T('Дата оплаты', auto_size_text=True), sg.In(results[24],size=(10,1), key='-DATEO-'),
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEO-', format='%d.%m.%Y'),
-        sg.Combo(('Получено','Оплачено','Нет'), default_value=results[25], size=(8,1)),
+        sg.Combo(('Получено','Оплачено','Нет'), default_value=results[25], size=(8,1), key='-SOPL-'),
         sg.T('Документы до', auto_size_text=True), sg.In(results[26], size=(10,1), key='-DATED-'),
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATED-', format='%d.%m.%Y'),
-        sg.Combo(('Получены','Сданы','Выданы','Нет'), default_value=results[27], size=(8,1))],
+        sg.Combo(('Получены','Сданы','Выданы','Нет'), default_value=results[27], size=(8,1), key='-SDOC-')],
         [sg.T('_'  * 100, size=(75, 1))],
-        [sg.Button('Сохранить'), sg.Button('Выход')]]
+        [sg.Button('Договор') ,sg.Button('Сохранить'), sg.Button('Выход')]]
 
     rewnd = sg.Window('Информация по заявке', agencylayout, no_titlebar=False)
 
@@ -254,24 +265,29 @@ def form (conn, req_id):
                 answ = sg.popup("ERROR", "-TOUROP-")
 
         if event == ('Сохранить'):
-            answ = sg.popup('Сохранить внесенные изменения ', custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
-#            if answ == 'Сохранить':
-#                upd_sql = "UPDATE list_request SET date_req = '" + str(values['-DATR-']) + "', numb_contr = '" + str(values[0]) + \
-#                "', country = '" + str(values[1]) + "', region = '" + str(values[2]) + "', id_cust = '" + str(cust_id) + \
-#                "', date_tour = '" + str(values['-DATEB-']) + "', date_end_tour = '" + str(values['-DATEE-']) + \
-#                "', quant_night = '" + str(values[3]) + "', ticket = '" + str(values[4]) +"', transfer = '" + str(values[5]) + \
-#                "', excur_prog  = '" + str(values[6]) + "', other_serv = '" + str(values[7]) + \
-#                "', tour_guide = '" +str(values[8]) + "', transl_guide = '" + str(values[9]) + "', team_leader = '" + str(values[10]) + \
-#                "', visa = '" + str(values[11]) + "', med_ins = '" + str(values[12]) + "', acc_ins = '" + str(values[13]) + \
-#                "', fail_ins = '" + str(values[14]) + "', id_to = '" + str(id_oper) + "', prim_ins = '" + str(values[15]) + "', curr_tour = '" + str(values[16])+ \
-#                "', date_prepay = '" + str(values['-DATEA-']) + "', paid_prepay = '" + str(values[17]) + \
-#                "', date_full_pay = '" + str(values['-DATEO-']) + "', paid_full_pay = '" + str(values[18]) + \
-#                "', date_doc = '" + str(values['-DATED-']) + "', rec_doc = '" + str(values[19]) + "', cost_tour_curr = '" + str(values[20]) + \
-#                "', cost_tour_rub = '" + str(values[21]) + "', prepay_rub = '" + str(values[22]) + "', rate_to = '" + str(values[23]) + \
-#                "' WHERE id_req = '" + str(req_id) + "';"
-#                cursor.execute(upd_sql)
-#                conn.commit()
-#            break
+            answ = sg.popup('Сохранить внесенные изменения? ', custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
+            if answ == 'Сохранить':
+                column_values = (
+                    values['-DATR-'], values['-NCONTR-'], values[0], values[1] , cust_id, values['-DATEB-'], values['-DATEE-'],\
+                    values['-NNIGHT-'], values[2], values[3], values['-EPROG-'], values['-PRUS-'], values['-GID-'], values['-EXCUR-'],\
+                    values['-LEAD-'], values['-VISA-'], values['-MEDS-'], values['-NSS-'], values['-NEVS-'], id_oper, values['-CURR-'],\
+                    values['-DATEA-'], values['-SAVA-'], values['-DATEO-'], values['-SOPL-'], values['-DATED-'], values['-SDOC-'],\
+                    values['-CTOURC-'], values['-CTOURR-'], values['-VAVA-'], values['-CAVA-'], values['-PRIM-'], values['-NREGTO-'],\
+                    values['-SREGTO-'], req_id
+                                )
+                upd_sql = "\
+                UPDATE list_request SET date_req = ?, numb_contr = ?, country = ?, region = ?, id_cust = ?, date_tour = ?, \
+                date_end_tour = ?, quant_night = ?, ticket = ?, transfer = ?, excur_prog  = ?, other_serv = ?, tour_guide = ?,\
+                transl_guide =  ?, team_leader = ?, visa = ?, med_ins = ?, acc_ins = ?, fail_ins = ?, id_to = ?, curr_tour = ?,\
+                date_prepay = ?, paid_prepay = ?, date_full_pay = ?, paid_full_pay = ?, date_doc = ?, rec_doc = ?, cost_tour_curr = ?,\
+                cost_tour_rub = ?, prepay_rub = ?, rate_to = ?, prim_ins = ?, numreq_tourop =?, status_req = ? WHERE id_req = ?\
+                "
+                cursor.execute(upd_sql,column_values)
+                conn.commit()
+        if event == ('Договор'):
+            answ = sg.popup('Сформировать договор по заявке? ', custom_text=('Сформировать', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
+            if answ == 'Сформировать':
+                dogform(values, results1[0])
 
     rewnd.close()
     return req_id

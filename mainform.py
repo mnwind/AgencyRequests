@@ -112,5 +112,7 @@ while True:     # Обработка событий
             nrow = values['-LREQS-'][0]
         req_id = results[nrow][0]
         req_id = reqsimpleform.form(conn, req_id)
+        results = listreq(cursor)
+        window['-LREQS-'].update(results)
 conn.close()    # Закрытие БД
 window.close()
