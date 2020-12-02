@@ -6,11 +6,36 @@ from os import path, startfile
 from datetime import date
 from docxtpl import DocxTemplate
 
-def dogform(values, fio):
+def dogform(cursor, results, cust_id, id_oper):
 # формирование договора из шаблона  
     doc_filename=path.join('tpl', 'contracttpl.docx')
     doc = DocxTemplate(doc_filename)
-    context = { 'customer' : fio }
+#   формирование строки передаваемой в редактор   
+#   блок полей заказчика    
+    if cust_id == 0:
+        results1 = ['', '', '', '', '', '', '']
+    else:
+        cursor.execute("SELECT fio, num_local_pass, date_local_pass, who_local_pass, cust_adress, cust_tel, cust_email \
+        FROM Cat_cust WHERE id_cust = "+ str(cust_id))
+        results1 = cursor.fetchone()
+#   блок полей оператора
+    if id_oper == 0:
+        results2 = ['', '', '', '', '', '', '', '', '', '', '', '', '']
+    else:
+        cursor.execute("SELECT name_full_to, name_short_to, adress_to, tel_to, site, email_to, num_fedr_to, text_strah,\
+        date_beg_strah, date_end_strah, name_strah, adress_strah, tel_strah FROM cat_tourop WHERE id_to = "+ str(id_oper))
+        results2 = cursor.fetchone()
+#   блок полей заявки
+    context =   {'customer' : results1[0], 'custpass' : results1[1], 'custpassdate' : results1[2],\
+    'custpasswho' : results1[3], 'custadr' : results1[4], 'custtel' : results1[5], 'custemail' : results1[6], \
+    'namefullto' : results2[0], 'nameshortto' : results2[1], 'adressto' : results2[2], 'tellto' : results2[3], 'siteto' : results2[4], \
+    'emailto' : results2[5], 'numreestr' : results2[6], 'textstrah' : results2[7], 'datebegstrah' : results2[8], \
+    'dateendstrah' : results2[9], 'namestrah' : results2[10], 'adressstrah' : results2[11], 'telstrah' : results2[12], \
+    'datereq' : results[1], 'numbcontr' : results[2], 'country' : results[3], 'region' : results[4], 'datetour' : results[6], \
+    'dateendtour' : results[7], 'quantn' : results[8], 'ticket' : results[9], 'transfer' : results[10], 'excurprog' : results[11], \
+    'otherserv' : results[12], 'tourgid' : results[13], 'transl' : results[14], 'lead' : results[15], 'viza' : results[16], \
+    'med' : results[17], 'acc' : results[18], 'fail' : results[19], 'datefullpay' : results[24], 'costrub' : results[29], \
+    'costcur' : results[28], 'curtour' : results[21], 'prepayrub' : results[30],'datedoc' : results[26], 'rateto' : results[31] }
     doc.render(context)
     gen_doc_filename = path.join('tpl', 'contractgen.docx')
     doc.save(gen_doc_filename)
@@ -287,7 +312,7 @@ def form (conn, req_id):
         if event == ('Договор'):
             answ = sg.popup('Сформировать договор по заявке? ', custom_text=('Сформировать', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Сформировать':
-                dogform(values, results1[0])
+                dogform(cursor, results, cust_id, id_oper)
 
     rewnd.close()
     return req_id
