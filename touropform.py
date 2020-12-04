@@ -48,7 +48,7 @@ def form (conn):
     [sg.T('Телефон', size=(20,1)), sg.In(size=(12,1), key='-TEL-', default_text=results1[6]),
     sg.T('E-mail', auto_size_text=True), sg.In(size=(20,1), key='-EMAIL-', default_text=results1[7]),
     sg.T('Сайт',auto_size_text=True), sg.In(size=(20,1), key='-SITE-', default_text=results1[9])],
-    [sg.T('_'  * 100, size=(100, 1))],
+    [sg.HorizontalSeparator()],
     [sg.T('Финансовое обеспечение', size=(40,1))],
     [sg.T('Наименование страховщика', size=(20,1)), sg.In(size=(70,1), key='-STRA-', default_text=results1[10])],
     [sg.T('Адрес', size=(20,1)), sg.In(size=(70,1), key='-ADST-', default_text=results1[11])],
@@ -56,10 +56,12 @@ def form (conn):
     [sg.T('Период действия, с:', size=(20,1)), sg.In(size=(10,1), key='-DATEB-', default_text=results1[14]), sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEB-', format='%d.%m.%Y'),
     sg.T('по:', auto_size_text=True), sg.In(size=(10,1), key='-DATEE-', default_text=results1[15]),  sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEE-', format='%d.%m.%Y'),
     sg.T('Телефон', auto_size_text=True), sg.In(size=(12,1), key='-STTEL-', default_text=results1[12])],
+    [sg.HorizontalSeparator()],
     [sg.Button('Сохранить', tooltip='Сохранить внесенные изменения'), sg.Button('Выход', tooltip='Выход')]]
 
     column_to_list = [[sg.Text('Список туроператоров')],
     [sg.Listbox(values=results, size=(30, 15), key='-LIST-', default_values=results[0], enable_events=True, auto_size_text=True, pad=(5, 5), select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)],
+    [sg.HorizontalSeparator()],
     [sg.Button('Новый', tooltip='Новый туроператор'), sg.Button('Удалить', tooltip='Удалить'), sg.Button('Выбрать', tooltip='Выбор туроператора для договора')]]
 
     tolayout = [[ sg.Column(column_to_list), sg.Column(column_to)]]

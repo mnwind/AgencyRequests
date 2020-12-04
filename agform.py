@@ -9,7 +9,7 @@ def form (conn):
 
     agencylayout = [
         [sg.T('Информация о предприятии', auto_size_text=True)],
-        [sg.T('_'  * 100, size=(75, 1))],
+        [sg.HorizontalSeparator()],
         [sg.T('Наименование', size=(15,1)), sg.In(results[1], size=(70,1))],
         [sg.T('Адрес', size=(15,1)), sg.In(results[2],size=(70,1))],
         [sg.T('ИНН', size=(15,1)), sg.In(results[3],size=(10,1)), sg.T('КПП', auto_size_text=True),
@@ -18,12 +18,12 @@ def form (conn):
         [sg.T('Телефон', size=(15,1)), sg.In(results[7],size=(12,1)), sg.T('E-mail', auto_size_text=True),
         sg.In(results[8],size=(15,1)), sg.T('WWW',auto_size_text=True), sg.In(results[9],size=(15,1))],
         [sg.T('Директор', size=(15,1)), sg.In(results[10],size=(25,1))],
-        [sg.T('_'  * 100, size=(75, 1))],
+        [sg.HorizontalSeparator()],
         [sg.T('Наименование банка', size=(15,1)), sg.In(results[11],size=(70,1))],
         [sg.T('Р/С', size=(15,1)), sg.In(results[12],size=(70,1))],
         [sg.T('К/С', size=(15,1)), sg.In(results[13],size=(70,1))],
         [sg.T('БИК', size=(15,1)), sg.In(results[14],size=(7,1))],
-        [sg.T('_'  * 100, size=(75, 1))],
+        [sg.HorizontalSeparator()],
         [sg.Button('Сохранить'), sg.Button('Выход')]]
 
     agwnd = sg.Window('Информация о предприятии', agencylayout, no_titlebar=False)
