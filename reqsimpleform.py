@@ -74,6 +74,7 @@ def listcust(cursor,req_id):
     if results4==[]:
         results4 = [('','', '','', '', '', '')]
     return results4
+
 def listhotel(cursor, req_id):
 #   получение информации из таблицы размещений по ИД заявки
     cursor.execute("SELECT no_in_table, date_begin, date_end, hotel, type_room, quant_room, accom, meal, hotel_addr FROM req_accom WHERE id_req = "+ str(req_id))
@@ -119,6 +120,30 @@ def listtrans(cursor,req_id):
         results5 = [('', '', '', '', '')]
     return results5
 
+def reqtransform(conn, results5, req_id):
+#   форма редактирования отеля
+    reqtranslayout = [
+    [sg.T('Тип перевозки', auto_size_text=True), sg.Combo(('Авиабилет','Ж.д.билет','Трансфер'), default_value=results5[1], size=(10,1), key='-TYPETRANS-'), 
+    sg.T('Маршрут', auto_size_text=True), sg.In(results5[2], size=(50,1), key='-ROUTE-'), 
+    sg.T('Дата туда ', auto_size_text=True), sg.In(results5[3], size=(10,1), key='-DATET-'),
+    sg.T('Дата обратно ', auto_size_text=True), sg.In(results5[4], size=(10,1), key='-DATEBACK-')],
+    [sg.Button('Сохранить'), sg.Button('Выход')]
+    ]
+    rtwnd = sg.Window('Перевозки по туру', reqtranslayout, no_titlebar=False)
+    while True:
+        event, values =rtwnd.read()
+        if event == 'Выход'  or event is None:
+            break
+        if event in ('Сохранить'):
+            column_values = (values['-TYPETRANS-'], values['-ROUTE-'], values['-DATET-'], values['-DATEBACK-'], req_id, results5[0])
+            upd_sql = "UPDATE req_trans SET type_trans = ?, route = ?, date_there = ?, date_back = ? WHERE id_req = ? AND no_in_trans= ?;"
+            cursor = conn.cursor()
+            cursor.execute(upd_sql,column_values)
+            conn.commit()
+            break
+    rtwnd.close()
+
+
 def form (conn, req_id):
     cursor = conn.cursor()
     if req_id == 0: #если заявка новая создается запись, получается id
@@ -156,10 +181,10 @@ def form (conn, req_id):
     header_list_hotel = ['№ ', 'Заезд', 'Выезд', 'Отель', 'Номер', 'К-во', 'Размещение', 'Питание', 'Адрес отеля' ]
 #   получение информации из таблицы транспорта по ИД заявки
     results5 = listtrans(cursor, req_id)
-    header_list_trans = ['№', 'Тип', 'Маршрут', 'Дата туда', 'Дата обратно']
+    header_list_trans = ['№', 'Тип', 'Маршрут (вид, класс)', 'Дата туда', 'Дата обратно']
 #   получение информации из таблицы туристов по ИД заявки
     results4 = listcust(cursor,req_id)
-    header_list_turists = ['ID','Фамилия Имя Отчество', 'Дата рождения', 'Номер З.Паспорта', 'Дата выдачи', 'Действует по', 'Подр.' ]
+    header_list_turists = ['ID','Фамилия Имя Отчество', 'Дата рождения', 'Номер З.П.', 'Дата выдачи', 'Действует по', 'Подр.' ]
 #Макет окна заявки
     agencylayout = [
         [sg.T('Заявка №', auto_size_text=True), sg.T(text = str(results[0]), size=(4,1)), sg.T('от', auto_size_text=True),
@@ -173,16 +198,16 @@ def form (conn, req_id):
         sg.T('по', auto_size_text=True), sg.In(results[7], size=(10,1), key='-DATEE-'),
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEE-', format='%d.%m.%Y'),
         sg.T('ночей', auto_size_text=True), sg.In(results[8], size=(2,1), key='-NNIGHT-')],
-        [sg.T('Билет', size=(6,1)), sg.In(results[9],size=(50,1)), sg.T('Трансфер', auto_size_text=True), sg.In(results[10],size=(30,1))],
+        [sg.T('Билет', size=(6,1), visible=False), sg.In(results[9],visible=False, size=(50,1)), sg.T('Трансфер', visible=False, auto_size_text=True), sg.In(results[10], visible=False, size=(30,1))],
         [sg.HorizontalSeparator()],
         [sg.T('Транспорт:' , size=(9,1)),
-        sg.Table( values=results5 , headings=header_list_trans, num_rows=2, key='-LTRANS-', enable_events=True, pad=(1, 1), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
+        sg.Table( values=results5 , headings=header_list_trans, num_rows=2, key='-LTRANS-', enable_events=True, pad=(1, 1), auto_size_columns=False, col_widths=[2, 10, 48, 10, 10], select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
         [sg.T('', size=(9,1)), sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Add_24x24.png'), key='-ATRANS-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Properties_24x24.png'), key='-MTRANS-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Delete_24x24.png'), key='-DTRANS-')],
         [sg.HorizontalSeparator()],
         [sg.T('Отели:' , size=(6,1)),
-        sg.Table( values=results3 , headings=header_list_hotel, num_rows=1, key='-LHOTEL-', enable_events=True, pad=(1, 1), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
+        sg.Table( values=results3 , headings=header_list_hotel, num_rows=1, key='-LHOTEL-', enable_events=True, pad=(1, 1), select_mode=sg.TABLE_SELECT_MODE_BROWSE, auto_size_columns=False, col_widths=[2, 10, 10, 20,8, 3, 10, 10, 10])],
         [sg.T('', size=(6,1)), sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Add_24x24.png'), key='-AHOTEL-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Properties_24x24.png'), key='-MHOTEL-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Delete_24x24.png'), key='-DHOTEL-')],
@@ -200,7 +225,7 @@ def form (conn, req_id):
         sg.T('примечание', auto_size_text=True), sg.In(results[32], size=(20,1), key='-PRIM-')],
         [sg.HorizontalSeparator()],
         [sg.T('Туристы:' , size=(6,1)),
-        sg.Table( values=results4 , headings=header_list_turists, num_rows=4, key='-LTURISTS-', enable_events=True, pad=(5, 5), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
+        sg.Table( values=results4 , headings=header_list_turists, num_rows=4, key='-LTURISTS-', enable_events=True, pad=(5, 5), select_mode=sg.TABLE_SELECT_MODE_BROWSE, auto_size_columns=False, col_widths=[3, 30, 10, 10, 10, 10, 10])],
         [sg.T('', size=(6,1)), sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Add_24x24.png'), key='-ATURIST-'),
         sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Delete_24x24.png'), key='-DTURIST-')],
         [sg.HorizontalSeparator()],
@@ -232,6 +257,7 @@ def form (conn, req_id):
         event, values =rewnd.read()
         if event == 'Выход'  or event is None:
             break
+
         if event == '-AHOTEL-': # добавление нового отеля в список по заявке
             answ = sg.popup('Добавить новый отель? ', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Да':
@@ -249,6 +275,7 @@ def form (conn, req_id):
                 reqhotelform(conn,results3[-1],req_id)
                 results3 = listhotel(cursor, req_id)
                 rewnd['-LHOTEL-'].update(values=results3)
+
         if event == '-MHOTEL-': # изменение данных по отелю
             if values['-LHOTEL-'] == []:
                 nrow = 0
@@ -348,10 +375,52 @@ def form (conn, req_id):
                 "
                 cursor.execute(upd_sql,column_values)
                 conn.commit()
+
         if event == ('Договор'):
             answ = sg.popup('Сформировать договор по заявке? ', custom_text=('Сформировать', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Сформировать':
                 dogform(cursor, results, cust_id, id_oper, req_id)
+
+        if event == '-ATRANS-': # добавление новой перевозки в список по заявке
+            answ = sg.popup('Добавить новую перевозку? ', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
+            if answ == 'Да':
+#           Определение номера строки транспорта (no_in_trans)  
+                cursor.execute('SELECT MAX(no_in_trans) FROM req_trans WHERE id_req = "'+str(req_id)+'"')
+                n_s_t = cursor.fetchone()
+                if n_s_t[0] is None:
+                    n_str_trans = 1
+                else:
+                    n_str_trans = n_s_t[0] + 1                
+                ins_sql = "INSERT INTO req_trans (id_req, no_in_trans, date_there, date_back) VALUES ('" + str(req_id) + "','" + str(n_str_trans)+ "','" +str(results[6]) + "','" +str(results[7]) + "');"
+                cursor.execute(ins_sql)
+                conn.commit()
+                results5 = listtrans(cursor, req_id)
+                reqtransform(conn,results5[-1],req_id)
+                results5 = listtrans(cursor, req_id)
+                rewnd['-LTRANS-'].update(values=results5)
+
+        if event == '-MTRANS-': # изменение данных по перевозке
+            if values['-LTRANS-'] == []:
+                nrow = 0
+            else:
+                nrow = values['-LTRANS-'][0]
+            reqtransform(conn,results5[nrow],req_id)
+            results5 = listtrans(cursor, req_id)
+            rewnd['-LTRANS-'].update(values=results5)
+
+        if event == '-DTRANS-': # удаление перевозки из списка по заявке
+            if values['-LTRANS-'] == []:
+                nrow = 0
+            else:
+                nrow = values['-LTRANS-'][0]
+            answ = sg.popup('Удалить ' + str(results5[nrow][2]) + ' из списка?', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
+            if answ == 'Да':
+                del_sql = "DELETE FROM req_trans WHERE id_req = ? AND no_in_trans = ?"
+                column_values = (req_id, results5[nrow][0])
+                cursor.execute(del_sql, column_values)
+                conn.commit()
+                results5 = listtrans(cursor, req_id)
+                rewnd['-LTRANS-'].update(values=results5)
 
     rewnd.close()
     return req_id
