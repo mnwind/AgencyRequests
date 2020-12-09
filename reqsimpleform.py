@@ -109,6 +109,16 @@ def reqhotelform(conn,results3,req_id):
             break
     rhwnd.close()
 
+def listtrans(cursor,req_id):
+#   список транспорта по заявке
+#   получение информации из таблицы транспорта по ИД заявки
+    cursor.execute("SELECT no_in_trans, type_trans, route, date_there, date_back FROM req_trans WHERE id_req = "+ str(req_id) + " ORDER BY no_in_trans ASC")
+    results5 = cursor.fetchall()
+#   если транспорта нет то создать пустой список
+    if results5==[]:
+        results5 = [('', '', '', '', '')]
+    return results5
+
 def form (conn, req_id):
     cursor = conn.cursor()
     if req_id == 0: #если заявка новая создается запись, получается id
@@ -144,7 +154,9 @@ def form (conn, req_id):
     results3 = listhotel(cursor, req_id)
 #   Заголовок для таблицы гостиниц в форме
     header_list_hotel = ['№ ', 'Заезд', 'Выезд', 'Отель', 'Номер', 'К-во', 'Размещение', 'Питание', 'Адрес отеля' ]
-
+#   получение информации из таблицы транспорта по ИД заявки
+    results5 = listtrans(cursor, req_id)
+    header_list_trans = ['№', 'Тип', 'Маршрут', 'Дата туда', 'Дата обратно']
 #   получение информации из таблицы туристов по ИД заявки
     results4 = listcust(cursor,req_id)
     header_list_turists = ['ID','Фамилия Имя Отчество', 'Дата рождения', 'Номер З.Паспорта', 'Дата выдачи', 'Действует по', 'Подр.' ]
@@ -162,6 +174,12 @@ def form (conn, req_id):
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEE-', format='%d.%m.%Y'),
         sg.T('ночей', auto_size_text=True), sg.In(results[8], size=(2,1), key='-NNIGHT-')],
         [sg.T('Билет', size=(6,1)), sg.In(results[9],size=(50,1)), sg.T('Трансфер', auto_size_text=True), sg.In(results[10],size=(30,1))],
+        [sg.HorizontalSeparator()],
+        [sg.T('Транспорт:' , size=(9,1)),
+        sg.Table( values=results5 , headings=header_list_trans, num_rows=2, key='-LTRANS-', enable_events=True, pad=(1, 1), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
+        [sg.T('', size=(9,1)), sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Add_24x24.png'), key='-ATRANS-'),
+        sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Properties_24x24.png'), key='-MTRANS-'),
+        sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Delete_24x24.png'), key='-DTRANS-')],
         [sg.HorizontalSeparator()],
         [sg.T('Отели:' , size=(6,1)),
         sg.Table( values=results3 , headings=header_list_hotel, num_rows=1, key='-LHOTEL-', enable_events=True, pad=(1, 1), select_mode=sg.TABLE_SELECT_MODE_BROWSE)],
