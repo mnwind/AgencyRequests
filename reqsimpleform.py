@@ -43,8 +43,17 @@ def dogform(cursor, results, cust_id, id_oper, req_id):
         results3 = cursor.fetchone()
         tourist_contents.append({'fio' : results3[0], 'dater' : results3[1], 'numpass' : results3[2], 'dateiss' : results3[3], \
         'dateendpass' : results3[4]},)
-    
-    context =   {'trst_contents' : tourist_contents, 'htl_contents' : hotel_contents, 'customer' : results1[0], 'custpass' : results1[1], 'custpassdate' : results1[2],\
+#   блок полей перевозки
+    trans_contents = []
+    cursor.execute("SELECT type_trans, route, date_there, date_back FROM req_trans WHERE id_req = "+ str(req_id))
+    while True:
+        results5 = cursor.fetchone()
+        if results5 == None:
+            break
+        trans_contents.append({'typetrans' : results5[0], 'routetrans' : results5[1], 'datethere' : results5[2], \
+        'dateback' : results5[3],},)
+
+    context =   {'trans_contents' : trans_contents, 'trst_contents' : tourist_contents, 'htl_contents' : hotel_contents, 'customer' : results1[0], 'custpass' : results1[1], 'custpassdate' : results1[2],\
     'custpasswho' : results1[3], 'custadr' : results1[4], 'custtel' : results1[5], 'custemail' : results1[6], \
     'namefullto' : results2[0], 'nameshortto' : results2[1], 'adressto' : results2[2], 'tellto' : results2[3], 'siteto' : results2[4], \
     'emailto' : results2[5], 'numreestr' : results2[6], 'textstrah' : results2[7], 'datebegstrah' : results2[8], \
