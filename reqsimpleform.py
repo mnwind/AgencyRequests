@@ -50,8 +50,11 @@ def dogform(cursor, results, cust_id, id_oper, req_id):
         results5 = cursor.fetchone()
         if results5 == None:
             break
-        trans_contents.append({'typetrans' : results5[0], 'routetrans' : results5[1], 'datethere' : results5[2], \
-        'dateback' : results5[3],},)
+        trans_contents.append({'typetrans' : results5[0], 'routetrans' : results5[1], 'dthere' : results5[2], \
+        'dback' : results5[3],},)
+#   данные агентства
+    cursor.execute("SELECT * FROM Agency_card")
+    results6 = cursor.fetchone()
 
     context =   {'trans_contents' : trans_contents, 'trst_contents' : tourist_contents, 'htl_contents' : hotel_contents, 'customer' : results1[0], 'custpass' : results1[1], 'custpassdate' : results1[2],\
     'custpasswho' : results1[3], 'custadr' : results1[4], 'custtel' : results1[5], 'custemail' : results1[6], \
@@ -63,7 +66,9 @@ def dogform(cursor, results, cust_id, id_oper, req_id):
     'otherserv' : results[12], 'tourgid' : results[13], 'transl' : results[14], 'lead' : results[15], 'viza' : results[16], \
     'med' : results[17], 'acc' : results[18], 'fail' : results[19], 'datefullpay' : results[24], 'costrub' : results[29], \
     'costcur' : results[28], 'curtour' : results[21], 'prepayrub' : results[30],'datedoc' : results[26], 'rateto' : results[31], \
-     }
+    'nameag' : results6[1], 'adressag' : results6[2], 'innag' : results6[3], 'kppag' : results6[4], 'ogrnag' : results6[5], \
+    'okvedag' : results6[6], 'phoneag' : results6[7], 'emailag' : results6[8], 'siteag' : results6[9], 'bossag' : results6[10], \
+    'bankag' : results6[11], 'accountag' : results6[12], 'coraccount' : results6[13], 'bikag' : results6[14]}
     doc.render(context)
     gen_doc_filename = path.join('tpl', 'contractgen.docx')
     doc.save(gen_doc_filename)

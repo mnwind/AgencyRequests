@@ -60,6 +60,8 @@ except:
     reqsettings.form()
     conn = sql.connect(c_dbfile)
     cursor = conn.cursor()
+
+conn.execute("PRAGMA foreign_keys = ON")
 # TODO Проверка БД на пустоту
 # Установка темы
 sg.theme(c_theme)
