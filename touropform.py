@@ -20,9 +20,17 @@ def updatewnd(townd, results1):     # Обновление правой коло
     townd['-DATEB-'].update(results1[14])
     townd['-DATEE-'].update(results1[15])
 
-def updatelst(cursor, townd):       # Обновление списка туроператоров
+def updatelst(conn, townd):       # Обновление списка туроператоров
+    cursor = conn.cursor()
     cursor.execute("SELECT name_short_to FROM Cat_tourop ORDER BY name_short_to ASC")
     results = cursor.fetchall()
+    if results == []:
+        sg.popup('Список туроператоров пуст. Будет вставлена пустая запись')
+        ins_sql = "INSERT INTO Cat_tourop (name_short_to) VALUES (' ');"
+        cursor.execute(ins_sql)
+        conn.commit()
+        cursor.execute("SELECT name_short_to FROM Cat_tourop ORDER BY name_short_to ASC")
+        results = cursor.fetchall()
     townd['-LIST-'].update(results)
     return results[0]
 
@@ -34,6 +42,12 @@ def form (conn):
     cursor = conn.cursor()
     cursor.execute("SELECT name_short_to FROM Cat_tourop ORDER BY name_short_to ASC")
     results = cursor.fetchall()
+    if results == []:
+        sg.popup('Список туроператоров пуст. Будет вставлена пустая запись')
+        ins_sql = "INSERT INTO Cat_tourop (name_short_to) VALUES (' ');"
+        cursor.execute(ins_sql)
+        conn.commit()
+
 #   получение информации по первому туроператору
     s_name = results[0]
     cursor.execute("SELECT * FROM Cat_tourop WHERE name_short_to=?",s_name)
@@ -88,7 +102,7 @@ def form (conn):
                 ins_sql = "INSERT INTO Cat_tourop (name_short_to) VALUES ('" + answ + "');"
                 cursor.execute(ins_sql)
                 conn.commit()
-                s_name = updatelst(cursor, townd)
+                s_name = updatelst(conn, townd)
 #               получение данных по умолчанию
                 sel_sql = "SELECT * FROM Cat_tourop WHERE name_short_to='"+ answ + "';"
                 cursor.execute(sel_sql)
@@ -103,7 +117,7 @@ def form (conn):
                 cursor.execute(del_sql)
                 conn.commit()
 #               обновление списка
-                s_name = updatelst(cursor, townd)
+                s_name = updatelst(conn, townd)
 #               получение информации по первому в списке и обновление правой части
                 sel_sql = "SELECT * FROM Cat_tourop WHERE name_short_to='"+ s_name[0] + "';"
                 cursor.execute(sel_sql)
@@ -119,7 +133,7 @@ def form (conn):
                 upd_sql = "UPDATE Cat_tourop SET name_full_to = '" + str(values['-FNAME-']) + "', name_short_to = '" + str(values['-SNAME-']) + "', adress_to = '" + str(values['-ADR-']) + "', inn_to = '" + str(values['-INN-']) + "', kpp_to = '" + str(values['-KPP-']) + "', tel_to = '" + str(values['-TEL-']) + "', email_to = '" + str(values['-EMAIL-']) + "', num_fedr_to = '" + str(values['-NREE-']) + "', site = '" + str(values['-SITE-']) + "', name_strah = '" + str(values['-STRA-']) + "', adress_strah = '" + str(values['-ADST-']) + "', tel_strah = '" + str(values['-STTEL-']) + "', text_strah = '" + str(values['-STDO-']) + "', date_beg_strah = '" + str(values['-DATEB-']) + "', date_end_strah = '" + str(values['-DATEE-']) + "' WHERE id_to = '" + str(results1[0]) + "';"
                 cursor.execute(upd_sql)
                 conn.commit()
-                s_name = updatelst(cursor, townd)
+                s_name = updatelst(conn, townd)
 
     townd.close()
 

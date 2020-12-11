@@ -21,16 +21,22 @@ def listreq(cursor):
         results[i] = list(results[i])
 #       Заказчик по id
         if results[i][1] != 0:
-            cursor.execute(sel_sql_cust,(results[i][1],))
-            fio_cust = cursor.fetchone()
-            results[i][1] = fio_cust[0]
+            try:
+                cursor.execute(sel_sql_cust,(results[i][1],))
+                fio_cust = cursor.fetchone()
+                results[i][1] = fio_cust[0]
+            except:
+                results[i][1] = ''
         else:
             results[i][1] = ''
 #       Оператор по id
         if results[i][5] != 0:
-            cursor.execute(sel_sql_to,(results[i][5],))
-            nshort_to = cursor.fetchone()
-            results[i][5] = nshort_to[0]
+            try:
+                cursor.execute(sel_sql_to,(results[i][5],))
+                nshort_to = cursor.fetchone()
+                results[i][5] = nshort_to[0]
+            except:
+                results[i][5] = ''
         else:
             results[i][5] = ''
 #       вставка количество человек по заявке        
