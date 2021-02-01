@@ -8,6 +8,14 @@ import reqsimpleform
 from os import path
 import sqlite3 as sql
 
+def delreq (conn, req_id):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM req_tourist WHERE id_req = '" + str(req_id) + "';")
+    cursor.execute("DELETE FROM req_accom WHERE id_req = '" + str(req_id) + "';")
+    cursor.execute("DELETE FROM req_trans WHERE id_req = '" + str(req_id) + "';")
+    cursor.execute("DELETE FROM list_request WHERE id_req = '" + str(req_id) + "';")
+    conn.commit()
+
 
 def listreq(cursor):
 #    results = [['' for _ in range(len(header_list_req))]]
@@ -61,7 +69,7 @@ except:
     conn = sql.connect(c_dbfile)
     cursor = conn.cursor()
 
-conn.execute("PRAGMA foreign_keys = ON")
+#conn.execute("PRAGMA foreign_keys = ON")
 # TODO Проверка БД на пустоту
 # Установка темы
 sg.theme(c_theme)
@@ -69,7 +77,7 @@ sg.theme(c_theme)
 header_list_req = ['ID','Заказчик','Туристов','Направление','Начало','Окончание','Оператор','Статус заявки','Аванс до','Статус аванса','Оплата до','Статус оплаты','Документы','Статус']
 results = listreq(cursor)
 # Макет окна
-menu_def = [['Заявки', ['Новая', 'E&xit']],
+menu_def = [['Заявки', ['Новая', 'Удалить', 'E&xit']],
             ['Справочники', ['Клиенты', 'Операторы', 'Агентство']],
             ['О программе', ['Настройки', '&Help']]
             ]
@@ -91,18 +99,35 @@ while True:     # Обработка событий
         window.Disable()
         req_id = 0
         req_id = reqsimpleform.form(conn, req_id)
+        results = listreq(cursor)
+        window['-LREQS-'].update(results)
         window.Enable()
         window.BringToFront()
+
+    if event == 'Удалить':
+        if values['-LREQS-'] == []:
+            nrow = 0
+        else:
+            nrow = values['-LREQS-'][0]
+        req_id = results[nrow][0]
+        answ = sg.popup('Удалить данные по заявке ' + str(req_id), custom_text=('Удалить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
+        if answ == 'Удалить':
+           delreq(conn, req_id)
+        results = listreq(cursor)
+        window['-LREQS-'].update(results)
+
     if event == 'Клиенты':
         window.Disable()
         id_cust = custform.form(conn)
         window.Enable()
         window.BringToFront()
+        window['-LREQS-'].update(results)
     if event == 'Операторы':
         window.Disable()
         id_oper = touropform.form(conn)
         window.Enable()
         window.BringToFront()
+        window['-LREQS-'].update(results)
     if event == 'Агентство':
         window.Disable()
         agform.form(conn)

@@ -47,7 +47,8 @@ def form (conn):
         ins_sql = "INSERT INTO Cat_tourop (name_short_to) VALUES (' ');"
         cursor.execute(ins_sql)
         conn.commit()
-
+        cursor.execute("SELECT name_short_to FROM Cat_tourop ORDER BY name_short_to ASC")
+        results = cursor.fetchall()
 #   получение информации по первому туроператору
     s_name = results[0]
     cursor.execute("SELECT * FROM Cat_tourop WHERE name_short_to=?",s_name)
@@ -110,8 +111,12 @@ def form (conn):
                 updatewnd(townd, results1)
 
         if event == 'Удалить':
-            answ = sg.popup('Удалить данные оператора ' + results1[2], custom_text=('Удалить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
+            answ = sg.popup('Удалить данные оператора ' + results1[2] + '. В том числе из существующих заявок?', custom_text=('Удалить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Удалить':
+#               замена на 0 id туроператора в заявках
+                upd_sql = "UPDATE list_request SET id_to = 0 WHERE id_to = " + str(results1[0])
+                cursor.execute(upd_sql)
+                conn.commit()
 #               удаление записи по туроператору
                 del_sql = "DELETE FROM Cat_tourop WHERE name_short_to = '" + results1[2] + "';"
                 cursor.execute(del_sql)

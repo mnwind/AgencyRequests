@@ -18,9 +18,17 @@ def updatewnd(cuwnd, results1):     # Обновление правой коло
     cuwnd['-CMAIL-'].update(results1[13])
     cuwnd['-DATER-'].update(results1[14])
 
-def updatelst(cursor, cuwnd):       # Обновление списка клиентов
+def updatelst(conn, cuwnd):       # Обновление списка клиентов
+    cursor = conn.cursor()
     cursor.execute("SELECT fio FROM Cat_cust ORDER BY fio ASC")
     results = cursor.fetchall()
+    if results == []:
+        sg.popup('Список клиентов пуст. Будет вставлена пустая запись')
+        ins_sql = "INSERT INTO Cat_cust (fio) VALUES (' ');"
+        cursor.execute(ins_sql)
+        conn.commit()
+        cursor.execute("SELECT fio FROM Cat_cust ORDER BY fio ASC")
+        results = cursor.fetchall()
     cuwnd['-LIST-'].update(results)
     return results[0]
 
@@ -32,6 +40,11 @@ def form (conn):
     cursor = conn.cursor()
     cursor.execute("SELECT fio FROM Cat_cust ORDER BY fio ASC")
     results = cursor.fetchall()
+    if results == []:
+        sg.popup('Список клиентов пуст. Будет вставлена пустая запись')
+        ins_sql = "INSERT INTO Cat_cust (fio) VALUES (' ');"
+        cursor.execute(ins_sql)
+        conn.commit()
 # Получение данных по первому клиенту
     s_name = results[0]
     cursor.execute("SELECT * FROM Cat_cust WHERE fio=?",s_name)
@@ -88,19 +101,28 @@ def form (conn):
                 ins_sql = "INSERT INTO Cat_cust (fio) VALUES ('" + answ + "');" #Вставка записи с введенным именем
                 cursor.execute(ins_sql)
                 conn.commit()
-                s_name = updatelst(cursor, cuwnd)   # Обновление списка
+                s_name = updatelst(conn, cuwnd)   # Обновление списка
                 sel_sql = "SELECT * FROM Cat_cust WHERE fio='"+ answ + "';" # Получение данных по умолчанию
                 cursor.execute(sel_sql)
                 results1 = cursor.fetchone()
                 updatewnd(cuwnd, results1)  # Обновление правой колонки
 
         if event == 'Удалить':
-            answ = sg.popup('Удалить данные по заказчику ' + results1[1], custom_text=('Удалить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
+            answ = sg.popup('Удалить данные по заказчику ' + results1[1] + '. В том числе из существующих заявок?', custom_text=('Удалить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Удалить':
-                del_sql = "DELETE FROM Cat_cust WHERE fio = '" + results1[1] + "';" # Удаление данных по клиенту
+#               замена на 0 id заказчика в списке заявок
+                upd_sql = "UPDATE list_request SET id_cust = 0 WHERE id_cust = " + str(results1[0])
+                cursor.execute(upd_sql)
+                conn.commit()
+#               удаление записей по id клиента из списка туристов по заявке
+                del_sql = "DELETE FROM req_tourist WHERE id_cust = " + str(results1[0])
                 cursor.execute(del_sql)
                 conn.commit()
-                s_name = updatelst(cursor, cuwnd)   # Получение списка клиентов
+#               Удаление данных по клиенту
+                del_sql = "DELETE FROM Cat_cust WHERE fio = '" + results1[1] + "';"
+                cursor.execute(del_sql)
+                conn.commit()
+                s_name = updatelst(conn, cuwnd)   # Получение списка клиентов
                 sel_sql = "SELECT * FROM Cat_cust WHERE fio='"+ s_name[0] + "';"
                 cursor.execute(sel_sql)
                 results1 = cursor.fetchone()
@@ -116,7 +138,7 @@ def form (conn):
                 upd_sql = "UPDATE Cat_cust SET fio = '" + str(values['-FIO-']) + "', cust_adress = '" + str(values['-ADR-']) + "', num_local_pass = '" + str(values['-LPASS-']) + "', date_local_pass = '" + str(values['-DLPASS-']) + "', who_local_pass = '" + str(values['-WLPASS-']) + "', num_for_pass = '" + str(values['-FPASS-']) + "', date_iss_for_pass = '" + str(values['-DIFP-']) + "', date_end_for_pass = '" + str(values['-DEFP-']) + "', who_for_pass = '" + str(values['-WFPASS-']) + "',first_name = '" + str(values['-FNCUST-']) + "', last_name = '" + str(values['-FLCUST-']) + "', cust_tel = '" + str(values['-CTEL-']) + "', cust_email = '" + str(values['-CMAIL-']) + "', date_r = '" + str(values['-DATER-']) + "' WHERE id_cust = '" + str(results1[0]) + "';"
                 cursor.execute(upd_sql) # Запись в БД
                 conn.commit()
-                s_name = updatelst(cursor, cuwnd)   #Обновление списка (возможно изменение имени)
+                s_name = updatelst(conn, cuwnd)   #Обновление списка (возможно изменение имени)
 
         if values['-FILTR-'] != '':                         # фильтр не пуст
             search = values['-FILTR-']
@@ -125,7 +147,7 @@ def form (conn):
             new_values = [x for x in results if search in x[0]]  # Фильтрация
             cuwnd['-LIST-'].update(new_values)      # Новый список
         else:
-            s_name = updatelst(cursor, cuwnd)       # Восстановление списка
+            s_name = updatelst(conn, cuwnd)       # Восстановление списка
     cuwnd.close()
 
     return id_cust
