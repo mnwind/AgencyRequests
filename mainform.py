@@ -18,10 +18,16 @@ def delreq (conn, req_id):
 
 
 def listreq(cursor):
-#    results = [['' for _ in range(len(header_list_req))]]
     sel_sql = 'SELECT id_req, id_cust, country, date_tour, date_end_tour, id_to, status_req, date_prepay, paid_prepay, date_full_pay, paid_full_pay, date_doc, rec_doc FROM list_request'
     cursor.execute(sel_sql)
     results = cursor.fetchall()
+    if results == []:
+        sg.popup('Список заявок пуст. Будет вставлена пустая запись')
+        ins_sql = "INSERT INTO list_request (country) VALUES (' ');"
+        cursor.execute(ins_sql)
+        conn.commit()
+        cursor.execute(sel_sql)
+        results = cursor.fetchall()
     count_sql = 'SELECT COUNT(*) FROM req_tourist WHERE id_req = ?'
     sel_sql_cust = 'SELECT fio FROM cat_cust WHERE id_cust = ?'
     sel_sql_to = 'SELECT name_short_to FROM cat_tourop WHERE id_to = ?'
@@ -86,9 +92,9 @@ layout = [
 #    [sg.Text('')],
     [sg.Text('Тут будет что-то про заявки', size=(100, 1))]
     ,[sg.Table( values=results, headings=header_list_req, key='-LREQS-', enable_events=False, justification='center', bind_return_key = True,
-    num_rows = 20, select_mode=sg.TABLE_SELECT_MODE_BROWSE, tooltip='Список заявок', auto_size_columns=True)]
+    num_rows = 20, select_mode=sg.TABLE_SELECT_MODE_EXTENDED, tooltip='Список заявок', auto_size_columns=True)]
     ]
-window = sg.Window("Заявки агентства", layout)
+window = sg.Window("Заявки агентства", layout,resizable=True)
 
 
 while True:     # Обработка событий
@@ -96,11 +102,13 @@ while True:     # Обработка событий
     if event in (sg.WIN_CLOSED, 'Exit'):
         break
     if event == 'Новая':
+#        window.disappear()
         window.Disable()
         req_id = 0
         req_id = reqsimpleform.form(conn, req_id)
         results = listreq(cursor)
         window['-LREQS-'].update(results)
+#        window.reappear()
         window.Enable()
         window.BringToFront()
 
