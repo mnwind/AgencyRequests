@@ -83,25 +83,39 @@ sg.theme(c_theme)
 header_list_req = ['ID','Заказчик','Туристов','Направление','Начало','Окончание','Оператор','Статус заявки','Аванс до','Статус аванса','Оплата до','Статус оплаты','Документы','Статус']
 results = listreq(cursor)
 # Макет окна
-menu_def = [['Заявки', ['Новая', 'Удалить', 'E&xit']],
-            ['Справочники', ['Клиенты', 'Операторы', 'Агентство']],
-            ['О программе', ['Настройки', '&Help']]
-            ]
+#menu_def = [['Заявки', ['Новая', 'Удалить', 'E&xit']],
+#            ['Справочники', ['Клиенты', 'Операторы', 'Агентство']],
+#            ['О программе', ['Настройки', '&Help']]
+#            ]
+frame_layout = [[sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Copy v2_32x32.png'), key='-CCUST-', tooltip = 'Справочник клиентов'),
+                sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Globe_32x32.png'), key='-COPER-', tooltip = 'Справочник операторов' ), 
+                sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Information_32x32.png'), key='-AGNCY-', tooltip = 'Информация о агентстве' ),
+                sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Settings_32x32.png'), key='-SETNG-', tooltip = 'Настройки' ),
+                sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Help_32x32.png'), key='-HELP-', tooltip = 'Помощь' ),
+                sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Log Out_32x32.png'), key='-EXIT-', tooltip = 'Выход' ),
+                ]]
 layout = [
-    [sg.Menu(menu_def, tearoff=False, pad=(200, 1))],
+#    [sg.Menu(menu_def, tearoff=False, pad=(200, 1))],
 #    [sg.Text('')],
-    [sg.Text('Тут будет что-то про заявки', size=(100, 1))]
-    ,[sg.Table( values=results, headings=header_list_req, key='-LREQS-', enable_events=False, justification='center', bind_return_key = True,
-    num_rows = 20, select_mode=sg.TABLE_SELECT_MODE_EXTENDED, tooltip='Список заявок', auto_size_columns=True)]
+    [sg.Table( values=results, headings=header_list_req, key='-LREQS-', enable_events=False, bind_return_key = True,
+    num_rows = 25, select_mode=sg.TABLE_SELECT_MODE_EXTENDED, tooltip='Список заявок', auto_size_columns=True)]
+    ,[ sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Add_24x24.png'), key='-AREQ-', tooltip = 'Новая заявка'),
+    sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Properties_24x24.png'), key='-MREQ-', tooltip = 'Редактировать заявку'),
+    sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Delete_24x24.png'), key='-DREQ-', tooltip = 'Удалить заявку'),
+    sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Upload_24x24.png'), key='-EXPORT-', tooltip = 'Экспорт в xls'),
+    sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Zoom In_24x24.png'), key='-FILTR-', tooltip = 'Фильтр')],
+    [sg.HorizontalSeparator()],
+    [sg.Frame('', frame_layout, element_justification = "center")],
+
     ]
-window = sg.Window("Заявки агентства", layout,resizable=True)
+window = sg.Window("Заявки агентства", layout, element_justification='center', margins = (15, 15), no_titlebar = False, border_depth = 5)
 
 
 while True:     # Обработка событий
     event, values = window.read()
-    if event in (sg.WIN_CLOSED, 'Exit'):
+    if event in (sg.WIN_CLOSED, '-EXIT-'):
         break
-    if event == 'Новая':
+    if event == '-AREQ-':
 #        window.disappear()
         window.Disable()
         req_id = 0
@@ -112,7 +126,7 @@ while True:     # Обработка событий
         window.Enable()
         window.BringToFront()
 
-    if event == 'Удалить':
+    if event == '-DREQ-':
         if values['-LREQS-'] == []:
             nrow = 0
         else:
@@ -124,29 +138,29 @@ while True:     # Обработка событий
         results = listreq(cursor)
         window['-LREQS-'].update(results)
 
-    if event == 'Клиенты':
+    if event == '-CCUST-':
         window.Disable()
         id_cust = custform.form(conn)
         window.Enable()
         window.BringToFront()
         window['-LREQS-'].update(results)
-    if event == 'Операторы':
+    if event == '-COPER-':
         window.Disable()
         id_oper = touropform.form(conn)
         window.Enable()
         window.BringToFront()
         window['-LREQS-'].update(results)
-    if event == 'Агентство':
+    if event == '-AGNCY-':
         window.Disable()
         agform.form(conn)
         window.Enable()
         window.BringToFront()
-    if event == 'Настройки':
+    if event == '-SETNG-':
         window.Disable()
         reqsettings.form()
         window.Enable()
         window.BringToFront()
-    if event == '-LREQS-':
+    if event == '-LREQS-' or event == '-MREQ-':
         if values['-LREQS-'] == []:
             nrow = 0
         else:
@@ -155,5 +169,15 @@ while True:     # Обработка событий
         req_id = reqsimpleform.form(conn, req_id)
         results = listreq(cursor)
         window['-LREQS-'].update(results)
+    if event == '-EXPORT-':
+        answ = sg.popup('Экспортировать таблицу заявок в xls файл? ', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
+        if answ == 'Да':
+            print('да')
+    if event == '-FILTR-':
+        window.Disable()
+        print('Filtr')
+        window.Enable()
+        window.BringToFront()
+
 conn.close()    # Закрытие БД
 window.close()

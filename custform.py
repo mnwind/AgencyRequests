@@ -80,7 +80,7 @@ def form (conn):
 
     tolayout = [[ sg.Column(column_to_list), sg.Column(column_to)]]
 
-    cuwnd = sg.Window('Список заказчиков', tolayout, no_titlebar=False)
+    cuwnd = sg.Window('Список заказчиков', tolayout, margins = (15, 15), no_titlebar = False, border_depth = 5)
 
     while True:     # Обработка событий
         event, values =cuwnd.read()
