@@ -41,10 +41,14 @@ def form():
 
     def TextLabel(text): return sg.Text(text+':', justification='r', size=(20,1))
 
+    frame_layout = [[sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Save_24x24.png'), key='-SAVE-', tooltip = 'Сохранить' ),
+    sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Log Out_24x24.png'), key='-EXIT-', tooltip = 'Выход' )]]
+
     layout = [  [sg.Text('Настройки')],
                 [TextLabel('База данных'),sg.Input(key='-DB FILE-', default_text=settings['db_file']), sg.FileBrowse(target='-DB FILE-')],
                 [TextLabel('Тема оформления'),sg.Combo(sg.theme_list(), size=(20, 20), key='-THEME-')],
-                [sg.Button('Сохранить'), sg.Button('Выход')]  ]
+                [sg.Frame('', frame_layout, element_justification = "center")]
+            ]
 
     window = sg.Window('Настройки', layout, keep_on_top=False, finalize=True)
 
@@ -58,9 +62,9 @@ def form():
             except Exception as e:
                 print(f'Ошибка чтения настроек. Key = {key}')
         event, values = window.read()
-        if event in (sg.WIN_CLOSED, 'Выход'):
+        if event in (sg.WIN_CLOSED, '-EXIT-'):
             break
-        if event == 'Сохранить':
+        if event == '-SAVE-':
             c_theme = values['-THEME-']
             sg.theme(c_theme)
             answ = sg.popup('Сохранить внесенные изменения ', custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)

@@ -4,9 +4,25 @@ import touropform
 import custform
 import reqsettings
 import reqsimpleform
-
-from os import path
+import xlwt
+from tempfile import TemporaryFile
+from os import path, startfile
 import sqlite3 as sql
+
+def xlsexport(results, header):
+    xls_filename=path.join('tpl', 'temp.xls')
+    book = xlwt.Workbook()
+    sheet1 = book.add_sheet('Заявки')
+    results.insert(0, header)
+    for rownum, sublist in enumerate(results):
+        for colnum, value in enumerate(sublist):
+            sheet1.write(rownum, colnum, value)
+    try:
+        book.save(xls_filename)
+        book.save(TemporaryFile())
+        startfile(xls_filename)
+    except:
+        sg.popup('Закройте временный файл')
 
 def delreq (conn, req_id):
     cursor = conn.cursor()
@@ -56,7 +72,7 @@ def listreq(cursor):
 #       вставка количество человек по заявке        
         cursor.execute(count_sql,str(results[i][0]))
         n_p = cursor.fetchall()
-        results[i].insert(2,n_p[0])
+        results[i].insert(2,n_p[0][0])
  
     return results
 
@@ -172,7 +188,7 @@ while True:     # Обработка событий
     if event == '-EXPORT-':
         answ = sg.popup('Экспортировать таблицу заявок в xls файл? ', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
         if answ == 'Да':
-            print('да')
+            xlsexport(results, header_list_req)
     if event == '-FILTR-':
         window.Disable()
         print('Filtr')

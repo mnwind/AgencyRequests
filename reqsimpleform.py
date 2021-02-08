@@ -71,8 +71,11 @@ def dogform(cursor, results, cust_id, id_oper, req_id):
     'bankag' : results6[11], 'accountag' : results6[12], 'coraccount' : results6[13], 'bikag' : results6[14]}
     doc.render(context)
     gen_doc_filename = path.join('tpl', 'contractgen.docx')
-    doc.save(gen_doc_filename)
-    startfile(gen_doc_filename)
+    try:
+        doc.save(gen_doc_filename)
+        startfile(gen_doc_filename)
+    except:
+        sg.popup('Закройте временный файл')
 
 def listcust(cursor,req_id):
 # получение информации из списка туристов по заявке
@@ -200,6 +203,9 @@ def form (conn, req_id):
     results4 = listcust(cursor,req_id)
     header_list_turists = ['ID','Фамилия Имя Отчество', 'Дата рождения', 'Номер З.П.', 'Дата выдачи', 'Действует по', 'Подр.' ]
 #Макет окна заявки
+    frame_layout = [[sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Text Document_24x24.png'), key='-DOGV-', tooltip = 'Договор' ),
+    sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Save_24x24.png'), key='-SAVE-', tooltip = 'Сохранить' ),
+    sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Log Out_24x24.png'), key='-EXIT-', tooltip = 'Выход' )]]
     agencylayout = [
         [sg.T('Заявка №', auto_size_text=True), sg.T(text = str(results[0]), size=(4,1)), sg.T('от', auto_size_text=True),
         sg.In(results[1], size=(10,1), key='-DATR-'), sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATR-', format='%d.%m.%Y'),
@@ -263,13 +269,14 @@ def form (conn, req_id):
         sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATED-', format='%d.%m.%Y'),
         sg.Combo(('Получены','Сданы','Выданы','Нет'), default_value=results[27], size=(8,1), key='-SDOC-')],
         [sg.HorizontalSeparator()],
-        [sg.Button('Договор') ,sg.Button('Сохранить'), sg.Button('Выход')]]
-
+        [sg.Frame('', frame_layout, element_justification = "center")]
+#        [sg.Button('Договор') ,sg.Button('Сохранить'), sg.Button('Выход')]]
+        ]
     rewnd = sg.Window('Информация по заявке', agencylayout, no_titlebar=False)
 
     while True:
         event, values =rewnd.read()
-        if event == 'Выход'  or event is None:
+        if event == '-EXIT-'  or event is None:
             break
 
         if event == '-AHOTEL-': # добавление нового отеля в список по заявке
@@ -369,7 +376,7 @@ def form (conn, req_id):
             except:
                 answ = sg.popup("ERROR", "-TOUROP-")
 
-        if event == ('Сохранить'):
+        if event == '-SAVE-':
             answ = sg.popup('Сохранить внесенные изменения? ', custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Сохранить':
                 column_values = (
@@ -390,7 +397,7 @@ def form (conn, req_id):
                 cursor.execute(upd_sql,column_values)
                 conn.commit()
 
-        if event == ('Договор'):
+        if event == '-DOGV-':
             answ = sg.popup('Сформировать договор по заявке? ', custom_text=('Сформировать', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Сформировать':
                 dogform(cursor, results, cust_id, id_oper, req_id)

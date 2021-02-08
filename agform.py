@@ -1,12 +1,14 @@
 import PySimpleGUI as sg
 import sqlite3 as sql
+from os import path
 
 def form (conn):
     agency_id = 1
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Agency_card WHERE id = "+ str(agency_id))
     results = cursor.fetchone()
-
+    frame_layout = [[sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Save_24x24.png'), key='-SAVE-', tooltip = 'Сохранить' ),
+    sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Log Out_24x24.png'), key='-EXIT-', tooltip = 'Выход' )]]
     agencylayout = [
         [sg.T('Информация о предприятии', auto_size_text=True)],
         [sg.HorizontalSeparator()],
@@ -24,18 +26,21 @@ def form (conn):
         [sg.T('К/С', size=(15,1)), sg.In(results[13],size=(70,1))],
         [sg.T('БИК', size=(15,1)), sg.In(results[14],size=(7,1))],
         [sg.HorizontalSeparator()],
-        [sg.Button('Сохранить'), sg.Button('Выход')]]
+        [sg.Frame('', frame_layout, element_justification = "center")]]
 
     agwnd = sg.Window('Информация о предприятии', agencylayout, no_titlebar=False)
 
     while True:
         event, values =agwnd.read()
-        if event == 'Выход'  or event is None:
+        if event == '-EXIT-'  or event is None:
             break
 
-        if event in ('Сохранить'):
-            upd_sql = "UPDATE Agency_card SET name = '" + str(values[0]) + "', adress = '" + str(values[1]) + "', inn = '" + str(values[2]) + "', kpp = '" + str(values[3]) + "', ogrn = '" + str(values[4]) + "', okved = '" + str(values[5]) + "', phone = '" + str(values[6]) + "', e_mail = '" + str(values[7]) + "', www = '" + str(values[8]) +"', boss = '" + str(values[9]) + "', bank_name  = '" + str(values[10]) + "', account = '" + str(values[11]) + "', cor_account = '" +str(values[12]) + "', bank_bik = '" + str(values[13]) + "' WHERE id = " + str(agency_id) +";"
-            cursor.execute(upd_sql)
-            conn.commit()
+        if event == '-SAVE-':
+            answ = sg.popup('Сохранить внесенные изменения? ', custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
+            if answ == 'Сохранить':
+                column_values = list(values.values())
+                upd_sql = "UPDATE Agency_card SET name = ?, adress = ?, inn = ?, kpp = ?, ogrn = ?, okved = ?, phone = ?, e_mail = ?, www = ?, boss = ?, bank_name  = ?, account = ?, cor_account = ?, bank_bik = ? WHERE id = " + str(agency_id) +";"
+                cursor.execute(upd_sql, column_values)
+                conn.commit()
 
     agwnd.close()
