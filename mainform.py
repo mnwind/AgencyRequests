@@ -8,6 +8,48 @@ import xlwt
 from tempfile import TemporaryFile
 from os import path, startfile
 import sqlite3 as sql
+from datetime import date, timedelta
+
+
+def filtrstr():
+    flstr = 'WHERE '
+    today = date.today()
+    mmonth = today - timedelta(days=30)
+    today = today.strftime("%d/%m/%Y")
+    mmonth = mmonth.strftime("%d/%m/%Y")
+    bt_layout = [[
+                sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Check_24x24.png'), key='-CHECK-', tooltip = 'Применить' ),
+                sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Log Out_24x24.png'), key='-EXIT-', tooltip = 'Выход' ),
+                ]]
+    fr_layout = [
+                [sg.Radio('Заявки с:', "RADIOFL", key = '-DATER-', default = True), sg.In(size=(10,1), key = '-DATEB-', default_text = mmonth),sg.T('по:'), sg.In(size=(10,1), key = '-DATEE-', default_text = today)],
+                [sg.Radio('Оплата (аванс и/или полная)', "RADIOFL", key = '-PAY-'), sg.T('в течение следующих '), sg.In(size=(2,1), key = '-DOPL-',default_text='3'), sg.T('дней')],
+                [sg.Radio('Прием/выдача документов', "RADIOFL", key = '-DOCS-'), sg.T('в течение следующих '), sg.In(size=(2,1), key = '-DDOC-',default_text='3'), sg.T('дней')],
+                [sg.Radio('Начало тура', "RADIOFL", key = '-BEG-'), sg.T('в течение следующих '), sg.In(size=(2,1), key = '-DBEG-',default_text='3'), sg.T('дней')],
+                ]
+    fl_layout = [
+        [sg.Frame('', fr_layout)],
+        [sg.Checkbox('Сбросить все фильтры', key = '-UNCHECK-')],
+        [sg.Frame('', bt_layout, element_justification = "center")],
+    ]
+    flwnd = sg.Window('Фильтры', fl_layout, no_titlebar=False)
+    while True:
+        event, values =flwnd.read()
+        if event in (sg.WIN_CLOSED, '-EXIT-'):
+            break
+        if event == '-CHECK-':
+            if values['-PAY-']:
+                flstr = flstr +'pay' + str(values['-DOPL-'])
+            if values['-DOCS-']:
+                flstr = flstr +'docs' + str(values['-DDOC-'])
+            if values['-BEG-']:
+                flstr = flstr +'beg' + str(values['-DBEG-'])
+            if values['-DATER-']:
+                flstr = flstr + 'dater' + str(values['-DATEB-']) + str(values['-DATEE-'])
+            if values['-UNCHECK-']:
+                flstr = ''
+            break
+    return flstr
 
 def xlsexport(results, header):
     xls_filename=path.join('tpl', 'temp.xls')
@@ -191,7 +233,8 @@ while True:     # Обработка событий
             xlsexport(results, header_list_req)
     if event == '-FILTR-':
         window.Disable()
-        print('Filtr')
+        flstr = filtrstr()
+        print(flstr)
         window.Enable()
         window.BringToFront()
 
