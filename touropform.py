@@ -54,6 +54,11 @@ def form (conn):
     cursor.execute("SELECT * FROM Cat_tourop WHERE name_short_to=?",s_name)
     results1 = cursor.fetchone()
 #   макет окна
+    frame_layout = [[sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Save_24x24.png'), key='-SAVE-', tooltip = 'Сохранить' ),
+    sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Log Out_24x24.png'), key='-EXIT-', tooltip = 'Выход' )]]
+    frame1_layout = [[ sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Add_24x24.png'), key='-ATO-', tooltip = 'Новый туроператор'),
+    sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Delete_24x24.png'), key='-DTO-', tooltip = 'Удалить'),
+    sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Check_24x24.png'), key='-CTO-', tooltip = 'Выбор туроператора для договора')]]
     column_to = [[sg.Text('Информация о туроператоре')],
     [sg.T('Полное наименование', size=(20,1)), sg.In(size=(70,1), key='-FNAME-', default_text=results1[1])],
     [sg.T('Адрес', size=(20,1)), sg.In(size=(70,1), key='-ADR-', default_text=results1[3])],
@@ -68,16 +73,16 @@ def form (conn):
     [sg.T('Наименование страховщика', size=(20,1)), sg.In(size=(70,1), key='-STRA-', default_text=results1[10])],
     [sg.T('Адрес', size=(20,1)), sg.In(size=(70,1), key='-ADST-', default_text=results1[11])],
     [sg.T('Наименование договора', size=(20,1)), sg.In(size=(70,1), key='-STDO-', default_text=results1[13])],
-    [sg.T('Период действия, с:', size=(20,1)), sg.In(size=(10,1), key='-DATEB-', default_text=results1[14]), sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEB-', format='%d.%m.%Y'),
-    sg.T('по:', auto_size_text=True), sg.In(size=(10,1), key='-DATEE-', default_text=results1[15]),  sg.CalendarButton(button_text='', image_filename=path.join('ico', 'Calendar_24x24.png'), target='-DATEE-', format='%d.%m.%Y'),
+    [sg.T('Период действия, с:', size=(20,1)), sg.In(size=(10,1), key='-DATEB-', default_text=results1[14]),
+    sg.T('по:', auto_size_text=True), sg.In(size=(10,1), key='-DATEE-', default_text=results1[15]),
     sg.T('Телефон', auto_size_text=True), sg.In(size=(12,1), key='-STTEL-', default_text=results1[12])],
     [sg.HorizontalSeparator()],
-    [sg.Button('Сохранить', tooltip='Сохранить внесенные изменения'), sg.Button('Выход', tooltip='Выход')]]
+    [sg.Frame('', frame_layout, element_justification = "center")]]
 
     column_to_list = [[sg.Text('Список туроператоров')],
     [sg.Listbox(values=results, size=(30, 15), key='-LIST-', default_values=results[0], enable_events=True, auto_size_text=True, pad=(5, 5), select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)],
     [sg.HorizontalSeparator()],
-    [sg.Button('Новый', tooltip='Новый туроператор'), sg.Button('Удалить', tooltip='Удалить'), sg.Button('Выбрать', tooltip='Выбор туроператора для договора')]]
+    [sg.Frame('', frame1_layout, element_justification = "center")]]
 
     tolayout = [[ sg.Column(column_to_list), sg.Column(column_to)]]
 
@@ -92,11 +97,11 @@ def form (conn):
             results1 = cursor.fetchone()
             updatewnd(townd, results1)
 
-        if event == 'Выход'  or event is None:
+        if event == '-EXIT-'  or event is None:
             id_oper = 0
             break
 
-        if event == 'Новый':
+        if event == '-ATO-':
             answ = sg.popup_get_text('Введите сокращенное имя нового оператора')
             if answ != None:
 #               вставка записи с введенным именем
@@ -110,7 +115,7 @@ def form (conn):
                 results1 = cursor.fetchone()
                 updatewnd(townd, results1)
 
-        if event == 'Удалить':
+        if event == '-DTO-':
             answ = sg.popup('Удалить данные оператора ' + results1[2] + '. В том числе из существующих заявок?', custom_text=('Удалить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Удалить':
 #               замена на 0 id туроператора в заявках
@@ -128,11 +133,11 @@ def form (conn):
                 cursor.execute(sel_sql)
                 results1 = cursor.fetchone()
                 updatewnd(townd, results1)
-        if event == 'Выбрать':
+        if event == '-CTO-':
             id_oper = results1[0]
             break
 
-        if event == 'Сохранить':
+        if event == '-SAVE-':
             answ = sg.popup('Сохранить внесенные изменения ' + results1[2], custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Сохранить':
                 upd_sql = "UPDATE Cat_tourop SET name_full_to = '" + str(values['-FNAME-']) + "', name_short_to = '" + str(values['-SNAME-']) + "', adress_to = '" + str(values['-ADR-']) + "', inn_to = '" + str(values['-INN-']) + "', kpp_to = '" + str(values['-KPP-']) + "', tel_to = '" + str(values['-TEL-']) + "', email_to = '" + str(values['-EMAIL-']) + "', num_fedr_to = '" + str(values['-NREE-']) + "', site = '" + str(values['-SITE-']) + "', name_strah = '" + str(values['-STRA-']) + "', adress_strah = '" + str(values['-ADST-']) + "', tel_strah = '" + str(values['-STTEL-']) + "', text_strah = '" + str(values['-STDO-']) + "', date_beg_strah = '" + str(values['-DATEB-']) + "', date_end_strah = '" + str(values['-DATEE-']) + "' WHERE id_to = '" + str(results1[0]) + "';"

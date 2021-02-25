@@ -8,18 +8,17 @@ import xlwt
 from tempfile import TemporaryFile
 from os import path, startfile
 import sqlite3 as sql
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 
 
-def filtrstr():
-    flstr = 'WHERE '
+def filtrstr(status_txt):
     today = date.today()
     mmonth = today - timedelta(days=30)
-    today = today.strftime("%d/%m/%Y")
-    mmonth = mmonth.strftime("%d/%m/%Y")
+    today = today.strftime("%d.%m.%Y")
+    mmonth = mmonth.strftime("%d.%m.%Y")
     bt_layout = [[
                 sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Check_24x24.png'), key='-CHECK-', tooltip = 'Применить' ),
-                sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Log Out_24x24.png'), key='-EXIT-', tooltip = 'Выход' ),
+                sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Log Out_24x24.png'), key='-EXT-', tooltip = 'Выход' ),
                 ]]
     fr_layout = [
                 [sg.Radio('Заявки с:', "RADIOFL", key = '-DATER-', default = True), sg.In(size=(10,1), key = '-DATEB-', default_text = mmonth),sg.T('по:'), sg.In(size=(10,1), key = '-DATEE-', default_text = today)],
@@ -35,21 +34,33 @@ def filtrstr():
     flwnd = sg.Window('Фильтры', fl_layout, no_titlebar=False)
     while True:
         event, values =flwnd.read()
-        if event in (sg.WIN_CLOSED, '-EXIT-'):
+        if event in (sg.WIN_CLOSED, '-EXT-'):
+            flstr = ''
             break
         if event == '-CHECK-':
             if values['-PAY-']:
-                flstr = flstr +'pay' + str(values['-DOPL-'])
+                datpay = date.today() + timedelta(days=int(values['-DOPL-'])) 
+                status_txt = 'Фильтр: Оплата в течение следующих ' + str(values['-DOPL-']) + ' дней'
+                print(datpay)
+                flstr = ''
             if values['-DOCS-']:
-                flstr = flstr +'docs' + str(values['-DDOC-'])
+                datdoc = date.today() + timedelta(days=int(values['-DDOC-']))
+                status_txt = 'Фильтр: Документы в течение следующих ' + str(values['-DDOC-']) + ' дней'
+                flstr = ' WHERE substr(date_doc,7)||"-"||substr(date_doc,4,2)||"-"||substr(date_doc,1,2) <= "' + str(datdoc) + '" AND rec_doc != "Выданы"'
             if values['-BEG-']:
-                flstr = flstr +'beg' + str(values['-DBEG-'])
+                dattour = date.today() + timedelta(days=int(values['-DBEG-']))
+                status_txt = 'Фильтр: Начало тура в течение следующих ' + str(values['-DBEG-']) + ' дней'
+                flstr = ' WHERE substr(date_tour,7)||"-"||substr(date_tour,4,2)||"-"||substr(date_tour,1,2) <= "' + str(dattour) + '" AND status_req != "Исполнена"'
             if values['-DATER-']:
-                flstr = flstr + 'dater' + str(values['-DATEB-']) + str(values['-DATEE-'])
+                datbeg = datetime.strptime(values['-DATEB-'], "%d.%m.%Y").date()
+                datend = datetime.strptime(values['-DATEE-'], "%d.%m.%Y").date()
+                status_txt = 'Фильтр: Дата заявки с ' + str(datbeg) + ' по ' + str(datend)
+                flstr = ' WHERE substr(date_req,7)||"-"||substr(date_req,4,2)||"-"||substr(date_req,1,2) BETWEEN "' + str(datbeg) +'" AND "' + str(datend) +'";'
             if values['-UNCHECK-']:
                 flstr = ''
+                status_txt = 'Без фильтра'
             break
-    return flstr
+    return flstr, status_txt
 
 def xlsexport(results, header):
     xls_filename=path.join('tpl', 'temp.xls')
@@ -75,11 +86,12 @@ def delreq (conn, req_id):
     conn.commit()
 
 
-def listreq(cursor):
-    sel_sql = 'SELECT id_req, id_cust, country, date_tour, date_end_tour, id_to, status_req, date_prepay, paid_prepay, date_full_pay, paid_full_pay, date_doc, rec_doc FROM list_request'
+def listreq(cursor, flstr):
+    sel_sql = 'SELECT id_req, id_cust, country, date_tour, date_end_tour, id_to, status_req, date_prepay, paid_prepay, date_full_pay, paid_full_pay, date_doc, rec_doc FROM list_request' + flstr
+#    print(sel_sql)
     cursor.execute(sel_sql)
     results = cursor.fetchall()
-    if results == []:
+    if results == [] and flstr == '':
         sg.popup('Список заявок пуст. Будет вставлена пустая запись')
         ins_sql = "INSERT INTO list_request (country) VALUES (' ');"
         cursor.execute(ins_sql)
@@ -126,7 +138,9 @@ c_theme = settings['theme']
 c_dbfile = settings['db_file']
 # Открытие БД
 try:
-    conn = sql.connect(c_dbfile)
+    conn = sql.connect(c_dbfile
+#    , detect_types=sql.PARSE_DECLTYPES|sql.PARSE_COLNAMES
+    )
     cursor = conn.cursor()
 except:
     reqsettings.form()
@@ -138,8 +152,10 @@ except:
 # Установка темы
 sg.theme(c_theme)
 #форморование таблицы заявок
+flstr = ''
+status_txt = 'Без фильтра                                                            '
 header_list_req = ['ID','Заказчик','Туристов','Направление','Начало','Окончание','Оператор','Статус заявки','Аванс до','Статус аванса','Оплата до','Статус оплаты','Документы','Статус']
-results = listreq(cursor)
+results = listreq(cursor, flstr)
 # Макет окна
 #menu_def = [['Заявки', ['Новая', 'Удалить', 'E&xit']],
 #            ['Справочники', ['Клиенты', 'Операторы', 'Агентство']],
@@ -164,11 +180,12 @@ layout = [
     sg.Button('', auto_size_button=True, image_filename=path.join('ico', 'Zoom In_24x24.png'), key='-FILTR-', tooltip = 'Фильтр')],
     [sg.HorizontalSeparator()],
     [sg.Frame('', frame_layout, element_justification = "center")],
-
+#    [sg.Text(key='-EXPAND-', font='ANY 1', pad=(0,0))],
+    [sg.StatusBar(status_txt, key = '-STATUSBAR-', auto_size_text = True, relief = "ridge")]
     ]
-window = sg.Window("Заявки агентства", layout, element_justification='center', margins = (15, 15), no_titlebar = False, border_depth = 5)
+window = sg.Window("Заявки агентства", layout, element_justification='center', margins = (15, 15), no_titlebar = False, border_depth = 5, finalize = True)
 
-
+#window['-EXPAND-'].expand(True, True, True)
 while True:     # Обработка событий
     event, values = window.read()
     if event in (sg.WIN_CLOSED, '-EXIT-'):
@@ -178,7 +195,7 @@ while True:     # Обработка событий
         window.Disable()
         req_id = 0
         req_id = reqsimpleform.form(conn, req_id)
-        results = listreq(cursor)
+        results = listreq(cursor, flstr)
         window['-LREQS-'].update(results)
 #        window.reappear()
         window.Enable()
@@ -193,7 +210,7 @@ while True:     # Обработка событий
         answ = sg.popup('Удалить данные по заявке ' + str(req_id), custom_text=('Удалить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
         if answ == 'Удалить':
            delreq(conn, req_id)
-        results = listreq(cursor)
+        results = listreq(cursor, flstr)
         window['-LREQS-'].update(results)
 
     if event == '-CCUST-':
@@ -225,7 +242,7 @@ while True:     # Обработка событий
             nrow = values['-LREQS-'][0]
         req_id = results[nrow][0]
         req_id = reqsimpleform.form(conn, req_id)
-        results = listreq(cursor)
+        results = listreq(cursor, flstr)
         window['-LREQS-'].update(results)
     if event == '-EXPORT-':
         answ = sg.popup('Экспортировать таблицу заявок в xls файл? ', custom_text=('Да', 'Нет'), button_type=sg.POPUP_BUTTONS_YES_NO)
@@ -233,8 +250,10 @@ while True:     # Обработка событий
             xlsexport(results, header_list_req)
     if event == '-FILTR-':
         window.Disable()
-        flstr = filtrstr()
-        print(flstr)
+        flstr, status_txt = filtrstr(status_txt)
+        results = listreq(cursor, flstr)
+        window['-LREQS-'].update(results)
+        window['-STATUSBAR-'].update(status_txt)
         window.Enable()
         window.BringToFront()
 
