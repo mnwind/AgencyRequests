@@ -1,5 +1,6 @@
 import PySimpleGUI as sg
 import sqlite3 as sql
+import contformat
 from os import path
 
 def updatewnd(cuwnd, results1):     # Обновление правой колонки макета
@@ -140,10 +141,13 @@ def form (conn):
         if event == '-SAVE-':
             answ = sg.popup('Сохранить внесенные изменения ' + results1[1], custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Сохранить':
-                upd_sql = "UPDATE Cat_cust SET fio = '" + str(values['-FIO-']) + "', cust_adress = '" + str(values['-ADR-']) + "', num_local_pass = '" + str(values['-LPASS-']) + "', date_local_pass = '" + str(values['-DLPASS-']) + "', who_local_pass = '" + str(values['-WLPASS-']) + "', num_for_pass = '" + str(values['-FPASS-']) + "', date_iss_for_pass = '" + str(values['-DIFP-']) + "', date_end_for_pass = '" + str(values['-DEFP-']) + "', who_for_pass = '" + str(values['-WFPASS-']) + "',first_name = '" + str(values['-FNCUST-']) + "', last_name = '" + str(values['-FLCUST-']) + "', cust_tel = '" + str(values['-CTEL-']) + "', cust_email = '" + str(values['-CMAIL-']) + "', date_r = '" + str(values['-DATER-']) + "' WHERE id_cust = '" + str(results1[0]) + "';"
-                cursor.execute(upd_sql) # Запись в БД
-                conn.commit()
-                s_name = updatelst(conn, cuwnd)   #Обновление списка (возможно изменение имени)
+                if contformat.contdatef(values['-DATER-']) and contformat.contdatef(values['-DLPASS-']) and contformat.contdatef(values['-DIFP-']) and contformat.contdatef(values['-DEFP-']):
+                    upd_sql = "UPDATE Cat_cust SET fio = '" + str(values['-FIO-']) + "', cust_adress = '" + str(values['-ADR-']) + "', num_local_pass = '" + str(values['-LPASS-']) + "', date_local_pass = '" + str(values['-DLPASS-']) + "', who_local_pass = '" + str(values['-WLPASS-']) + "', num_for_pass = '" + str(values['-FPASS-']) + "', date_iss_for_pass = '" + str(values['-DIFP-']) + "', date_end_for_pass = '" + str(values['-DEFP-']) + "', who_for_pass = '" + str(values['-WFPASS-']) + "',first_name = '" + str(values['-FNCUST-']) + "', last_name = '" + str(values['-FLCUST-']) + "', cust_tel = '" + str(values['-CTEL-']) + "', cust_email = '" + str(values['-CMAIL-']) + "', date_r = '" + str(values['-DATER-']) + "' WHERE id_cust = '" + str(results1[0]) + "';"
+                    cursor.execute(upd_sql) # Запись в БД
+                    conn.commit()
+                    s_name = updatelst(conn, cuwnd)   #Обновление списка (возможно изменение имени)
+                else:
+                    sg.popup('Ошибка в формате даты (правильный формат "дд.мм.гггг")')
 
         if values['-FILTR-'] != '':                         # фильтр не пуст
             search = values['-FILTR-']

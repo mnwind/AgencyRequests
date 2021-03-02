@@ -1,6 +1,7 @@
 import PySimpleGUI as sg
 import sqlite3 as sql
 from os import path
+import contformat
 
 def updatewnd(townd, results1):     # Обновление правой колонки макета
 
@@ -140,10 +141,13 @@ def form (conn):
         if event == '-SAVE-':
             answ = sg.popup('Сохранить внесенные изменения ' + results1[2], custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Сохранить':
-                upd_sql = "UPDATE Cat_tourop SET name_full_to = '" + str(values['-FNAME-']) + "', name_short_to = '" + str(values['-SNAME-']) + "', adress_to = '" + str(values['-ADR-']) + "', inn_to = '" + str(values['-INN-']) + "', kpp_to = '" + str(values['-KPP-']) + "', tel_to = '" + str(values['-TEL-']) + "', email_to = '" + str(values['-EMAIL-']) + "', num_fedr_to = '" + str(values['-NREE-']) + "', site = '" + str(values['-SITE-']) + "', name_strah = '" + str(values['-STRA-']) + "', adress_strah = '" + str(values['-ADST-']) + "', tel_strah = '" + str(values['-STTEL-']) + "', text_strah = '" + str(values['-STDO-']) + "', date_beg_strah = '" + str(values['-DATEB-']) + "', date_end_strah = '" + str(values['-DATEE-']) + "' WHERE id_to = '" + str(results1[0]) + "';"
-                cursor.execute(upd_sql)
-                conn.commit()
-                s_name = updatelst(conn, townd)
+                if contformat.contdatef(values['-DATEB-']) and contformat.contdatef(values['-DATEE-']):
+                    upd_sql = "UPDATE Cat_tourop SET name_full_to = '" + str(values['-FNAME-']) + "', name_short_to = '" + str(values['-SNAME-']) + "', adress_to = '" + str(values['-ADR-']) + "', inn_to = '" + str(values['-INN-']) + "', kpp_to = '" + str(values['-KPP-']) + "', tel_to = '" + str(values['-TEL-']) + "', email_to = '" + str(values['-EMAIL-']) + "', num_fedr_to = '" + str(values['-NREE-']) + "', site = '" + str(values['-SITE-']) + "', name_strah = '" + str(values['-STRA-']) + "', adress_strah = '" + str(values['-ADST-']) + "', tel_strah = '" + str(values['-STTEL-']) + "', text_strah = '" + str(values['-STDO-']) + "', date_beg_strah = '" + str(values['-DATEB-']) + "', date_end_strah = '" + str(values['-DATEE-']) + "' WHERE id_to = '" + str(results1[0]) + "';"
+                    cursor.execute(upd_sql)
+                    conn.commit()
+                    s_name = updatelst(conn, townd)
+                else:
+                    sg.popup('Ошибка в формате даты (правильный формат "дд.мм.гггг")')
 
     townd.close()
 

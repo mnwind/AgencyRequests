@@ -5,6 +5,7 @@ import touropform
 from os import path, startfile
 from datetime import date
 from docxtpl import DocxTemplate
+import contformat
 
 def dogform(cursor, results, cust_id, id_oper, req_id):
 # формирование договора из шаблона  
@@ -119,12 +120,16 @@ def reqhotelform(conn,results3,req_id):
         if event == 'Выход'  or event is None:
             break
         if event in ('Сохранить'):
-            column_values = (values['-DATEHB-'], values['-DATEHE-'], values['-REQHOTEL-'], values['-ADRHOTEL-'], values['-NROOMHOTEL-'], values['-QROOMHOTEL-'], values['-TROOMHOTEL-'], values['-MEALHOTEL-'], req_id, results3[0])
-            upd_sql = "UPDATE req_accom SET date_begin = ?, date_end = ?, hotel = ?, hotel_addr = ?, type_room = ?, quant_room = ?, accom = ?, meal = ? WHERE id_req = ? AND no_in_table= ?;"
-            cursor = conn.cursor()
-            cursor.execute(upd_sql,column_values)
-            conn.commit()
-            break
+            if contformat.contdatef(values['-DATEHB-']) and contformat.contdatef(values['-DATEHE-']):
+                column_values = (values['-DATEHB-'], values['-DATEHE-'], values['-REQHOTEL-'], values['-ADRHOTEL-'], values['-NROOMHOTEL-'], values['-QROOMHOTEL-'], values['-TROOMHOTEL-'], values['-MEALHOTEL-'], req_id, results3[0])
+                upd_sql = "UPDATE req_accom SET date_begin = ?, date_end = ?, hotel = ?, hotel_addr = ?, type_room = ?, quant_room = ?, accom = ?, meal = ? WHERE id_req = ? AND no_in_table= ?;"
+                cursor = conn.cursor()
+                cursor.execute(upd_sql,column_values)
+                conn.commit()
+                break
+            else:
+                sg.popup('Ошибка в формате даты (правильный формат "дд.мм.гггг")')
+
     rhwnd.close()
 
 def listtrans(cursor,req_id):
@@ -152,12 +157,15 @@ def reqtransform(conn, results5, req_id):
         if event == 'Выход'  or event is None:
             break
         if event in ('Сохранить'):
-            column_values = (values['-TYPETRANS-'], values['-ROUTE-'], values['-DATET-'], values['-DATEBACK-'], req_id, results5[0])
-            upd_sql = "UPDATE req_trans SET type_trans = ?, route = ?, date_there = ?, date_back = ? WHERE id_req = ? AND no_in_trans= ?;"
-            cursor = conn.cursor()
-            cursor.execute(upd_sql,column_values)
-            conn.commit()
-            break
+            if contformat.contdatef(values['-DATET-']) and contformat.contdatef(values['-DATEBACK-']):
+                column_values = (values['-TYPETRANS-'], values['-ROUTE-'], values['-DATET-'], values['-DATEBACK-'], req_id, results5[0])
+                upd_sql = "UPDATE req_trans SET type_trans = ?, route = ?, date_there = ?, date_back = ? WHERE id_req = ? AND no_in_trans= ?;"
+                cursor = conn.cursor()
+                cursor.execute(upd_sql,column_values)
+                conn.commit()
+                break
+            else:
+                sg.popup('Ошибка в формате даты (правильный формат "дд.мм.гггг")')
     rtwnd.close()
 
 
@@ -379,7 +387,8 @@ def form (conn, req_id):
         if event == '-SAVE-':
             answ = sg.popup('Сохранить внесенные изменения? ', custom_text=('Сохранить', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
             if answ == 'Сохранить':
-                column_values = (
+                if contformat.contdatef(values['-DATR-']) and contformat.contdatef(values['-DATEB-']) and contformat.contdatef(values['-DATEE-'])  and contformat.contdatef(values['-DATEA-'])  and contformat.contdatef(values['-DATEO-'])  and contformat.contdatef(values['-DATED-']):
+                    column_values = (
                     values['-DATR-'], values['-NCONTR-'], values[0], values[1] , cust_id, values['-DATEB-'], values['-DATEE-'],\
                     values['-NNIGHT-'], values[2], values[3], values['-EPROG-'], values['-PRUS-'], values['-GID-'], values['-EXCUR-'],\
                     values['-LEAD-'], values['-VISA-'], values['-MEDS-'], values['-NSS-'], values['-NEVS-'], id_oper, values['-CURR-'],\
@@ -387,15 +396,17 @@ def form (conn, req_id):
                     values['-CTOURC-'], values['-CTOURR-'], values['-VAVA-'], values['-CAVA-'], values['-PRIM-'], values['-NREGTO-'],\
                     values['-SREGTO-'], req_id
                                 )
-                upd_sql = "\
-                UPDATE list_request SET date_req = ?, numb_contr = ?, country = ?, region = ?, id_cust = ?, date_tour = ?, \
-                date_end_tour = ?, quant_night = ?, ticket = ?, transfer = ?, excur_prog  = ?, other_serv = ?, tour_guide = ?,\
-                transl_guide =  ?, team_leader = ?, visa = ?, med_ins = ?, acc_ins = ?, fail_ins = ?, id_to = ?, curr_tour = ?,\
-                date_prepay = ?, paid_prepay = ?, date_full_pay = ?, paid_full_pay = ?, date_doc = ?, rec_doc = ?, cost_tour_curr = ?,\
-                cost_tour_rub = ?, prepay_rub = ?, rate_to = ?, prim_ins = ?, numreq_tourop =?, status_req = ? WHERE id_req = ?\
-                "
-                cursor.execute(upd_sql,column_values)
-                conn.commit()
+                    upd_sql = "\
+                    UPDATE list_request SET date_req = ?, numb_contr = ?, country = ?, region = ?, id_cust = ?, date_tour = ?, \
+                    date_end_tour = ?, quant_night = ?, ticket = ?, transfer = ?, excur_prog  = ?, other_serv = ?, tour_guide = ?,\
+                    transl_guide =  ?, team_leader = ?, visa = ?, med_ins = ?, acc_ins = ?, fail_ins = ?, id_to = ?, curr_tour = ?,\
+                    date_prepay = ?, paid_prepay = ?, date_full_pay = ?, paid_full_pay = ?, date_doc = ?, rec_doc = ?, cost_tour_curr = ?,\
+                    cost_tour_rub = ?, prepay_rub = ?, rate_to = ?, prim_ins = ?, numreq_tourop =?, status_req = ? WHERE id_req = ?\
+                    "
+                    cursor.execute(upd_sql,column_values)
+                    conn.commit()
+                else:
+                    sg.popup('Ошибка в формате даты (правильный формат "дд.мм.гггг")')
 
         if event == '-DOGV-':
             answ = sg.popup('Сформировать договор по заявке? ', custom_text=('Сформировать', 'Отмена'), button_type=sg.POPUP_BUTTONS_YES_NO)
