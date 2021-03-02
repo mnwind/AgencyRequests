@@ -41,8 +41,7 @@ def filtrstr(status_txt):
             if values['-PAY-']:
                 datpay = date.today() + timedelta(days=int(values['-DOPL-'])) 
                 status_txt = 'Фильтр: Оплата в течение следующих ' + str(values['-DOPL-']) + ' дней'
-                print(datpay)
-                flstr = ''
+                flstr = ' WHERE (substr(date_prepay,7)||"-"||substr(date_prepay,4,2)||"-"||substr(date_prepay,1,2) <= "' + str(datpay) + '" AND paid_prepay != "Оплачено") OR (substr(date_full_pay,7)||"-"||substr(date_full_pay,4,2)||"-"||substr(date_full_pay,1,2) <= "' + str(datpay) + '" AND paid_full_pay != "Оплачено")'
             if values['-DOCS-']:
                 datdoc = date.today() + timedelta(days=int(values['-DDOC-']))
                 status_txt = 'Фильтр: Документы в течение следующих ' + str(values['-DDOC-']) + ' дней'
